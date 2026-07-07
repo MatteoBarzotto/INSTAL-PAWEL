@@ -30,4 +30,10 @@ python -m pip install --quiet --upgrade pip
 python -m pip install --quiet -r requirements.txt -r pdf_engine/requirements.txt
 
 echo "Uruchamiam aplikację — przeglądarka otworzy się sama."
-python app.py
+# Pętla restartu: kod wyjścia 42 = "zainstalowano aktualizację, uruchom ponownie"
+while true; do
+  python app.py
+  [ $? -eq 42 ] || break
+  echo "== Aktualizacja zainstalowana — uruchamiam ponownie... =="
+  python -m pip install --quiet -r requirements.txt -r pdf_engine/requirements.txt
+done

@@ -160,12 +160,14 @@ def aktualizuj(folder_kopii, timeout=60):
     return wersja_lokalna(), kopia
 
 
+# Kod wyjścia oznaczający "uruchom mnie ponownie" — pętla w start.command / start.bat
+# restartuje program (i robi pip install). Przy ręcznym `python app.py` program
+# po prostu się zamknie — strona w przeglądarce poprosi o ponowne uruchomienie.
+KOD_RESTARTU = 42
+
+
 def restart_programu(opoznienie=1.5):
-    """Restart aplikacji po aktualizacji (nowy kod wstaje pod tym samym adresem)."""
+    """Kończy proces kodem KOD_RESTARTU po krótkiej chwili (żeby zdążyć
+    odesłać odpowiedź HTTP). Restart robi skrypt startowy."""
     import threading
-
-    def _exec():
-        os.chdir(HERE)
-        os.execv(sys.executable, [sys.executable] + sys.argv)
-
-    threading.Timer(opoznienie, _exec).start()
+    threading.Timer(opoznienie, lambda: os._exit(KOD_RESTARTU)).start()

@@ -30,5 +30,12 @@ python -m pip install --quiet --upgrade pip
 python -m pip install --quiet -r requirements.txt -r pdf_engine\requirements.txt
 
 echo Uruchamiam aplikacje — przegladarka otworzy sie sama.
+REM Petla restartu: kod wyjscia 42 = "zainstalowano aktualizacje, uruchom ponownie"
+:uruchom
 python app.py
+if %errorlevel% equ 42 (
+  echo == Aktualizacja zainstalowana — uruchamiam ponownie... ==
+  python -m pip install --quiet -r requirements.txt -r pdf_engine\requirements.txt
+  goto uruchom
+)
 pause

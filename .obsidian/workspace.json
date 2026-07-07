@@ -94,7 +94,7 @@
               },
               "pinned": true,
               "icon": "terminal",
-              "title": "Terminal: ⠂ Dodać moduł umów do systemu wycen"
+              "title": "Terminal: ⠐ Dodać moduł umów do systemu wycen"
             }
           }
         ],
@@ -260,17 +260,17 @@
   },
   "active": "bedb4a33c4b9d27b",
   "lastOpenFiles": [
+    ".git/objects/70/d5198ebc4cb33c1da408c8ce0c0b37f052a8ec",
+    ".git/objects/89/3de7a708f617c75d21e1d747df8675b415723f",
+    ".git/objects/e4",
+    ".git/objects/e4/5f53b846206062f2984c2cc8e1971dd109a194",
+    ".git/objects/b5/cc74247998f83794c3a29bc0e15bc02f0897b6",
+    ".git/objects/45",
+    ".git/objects/45/0dda77c9b9a487b6fd1df3cdbb7c79f52aa55d",
+    ".git/objects/4f",
+    ".git/objects/4f/14ffb4e91d2a86c2dd54f2bb787703f64014ab",
     ".git/refs/remotes/origin/stable",
     ".git/logs/refs/remotes/origin/stable",
-    ".git/logs/refs/remotes/origin/main",
-    ".git/logs/refs/remotes/origin",
-    ".git/logs/refs/remotes",
-    ".git/refs/remotes/origin/main",
-    ".git/refs/remotes/origin",
-    ".git/refs/remotes",
-    ".git/refs/heads/main",
-    ".git/logs/refs/heads/main",
-    ".git/logs/refs/heads",
     "static/img/logo-instal-pawel.png",
     "FAKTURA/szablon-faktury-elektrycznej 2/project/uploads/pasted-1782328550952-0.png",
     "FAKTURA/szablon-faktury-elektrycznej 2/project/assets/logo-instal-pawel.png",
