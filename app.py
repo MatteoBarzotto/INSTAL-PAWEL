@@ -266,6 +266,10 @@ def _assemble(conn, payload):
     return data, suma, client
 
 
+MIESIACE = ["styczeń", "luty", "marzec", "kwiecień", "maj", "czerwiec",
+            "lipiec", "sierpień", "wrzesień", "październik", "listopad", "grudzień"]
+
+
 # ------------------------------------------------------------------ EKRAN: pulpit
 # Limit zwolnienia podmiotowego z VAT (art. 113 ust. 1) — wartość sprzedaży w roku.
 LIMIT_VAT = 200_000.0
@@ -277,9 +281,11 @@ LIMIT_KASA = 20_000.0
 def index():
     """Pulpit: faktury po terminie, obrót roczny vs limit VAT, ostatnie dokumenty."""
     conn = db.get_db()
-    dzis_iso = datetime.date.today().strftime("%Y-%m-%d")
-    rok = datetime.date.today().strftime("%Y")
-    miesiac = datetime.date.today().strftime("%Y-%m")
+    dzis = datetime.date.today()
+    dzis_iso = dzis.strftime("%Y-%m-%d")
+    rok = dzis.strftime("%Y")
+    miesiac = dzis.strftime("%Y-%m")
+    poprz = (dzis.replace(day=1) - datetime.timedelta(days=1))  # ostatni dzień poprzedniego miesiąca
     po_terminie = conn.execute(
         """SELECT * FROM invoices WHERE status='niezapłacona'
            AND term_date IS NOT NULL AND term_date != '' AND term_date < ?
@@ -298,6 +304,9 @@ def index():
     obrot_osfiz = conn.execute(
         f"SELECT COALESCE(SUM(suma),0) AS s FROM invoices WHERE osoba_fiz=1 AND {data_rozl} LIKE ?",
         (rok + "-%",)).fetchone()["s"]
+    obrot_poprz = conn.execute(
+        f"SELECT COALESCE(SUM(suma),0) AS s FROM invoices WHERE {data_rozl} LIKE ?",
+        (poprz.strftime("%Y-%m") + "-%",)).fetchone()["s"]
     # ostatnie dokumenty (wszystkie typy razem, wg czasu utworzenia)
     ostatnie = []
     for typ, sql, edytuj in [
@@ -318,6 +327,8 @@ def index():
                            po_terminie=po_terminie, niezaplacone=niezaplacone,
                            obrot_rok=obrot_rok, obrot_mies=obrot_mies,
                            obrot_osfiz=obrot_osfiz, limit_kasa=LIMIT_KASA, procent_kasa=procent_kasa,
+                           obrot_poprz=obrot_poprz, poprz_nazwa=MIESIACE[poprz.month - 1],
+                           poprz_rok=poprz.year, poprz_mm=poprz.month,
                            limit_vat=LIMIT_VAT, procent_vat=procent_vat,
                            rok=rok, ostatnie=ostatnie[:8], dzis_iso=dzis_iso)
 
@@ -951,6 +962,53 @@ def api_aktualizacja_wykonaj():
                                       "Program działa dalej w dotychczasowej wersji."), 500
     updater.restart_programu()
     return jsonify(ok=True, wersja=wersja, kopia=kopia)
+
+
+@app.route("/api/zestawienie/<int:rok>/<int:mies>/pdf", methods=["POST"])
+def api_zestawienie_pdf(rok, mies):
+    """Miesięczne zestawienie sprzedaży (PDF dla księgowej) — wg daty sprzedaży."""
+    if not (1 <= mies <= 12):
+        return jsonify(ok=False, blad="Nieprawidłowy miesiąc."), 400
+    conn = db.get_db()
+    st = _settings(conn)
+    data_rozl = "COALESCE(NULLIF(sprz_date,''), wyst_date)"
+    wzor = f"{rok:04d}-{mies:02d}-%"
+    rows = conn.execute(
+        f"""SELECT numer, {data_rozl} AS sprz, nabywca, suma, osoba_fiz, status
+            FROM invoices WHERE {data_rozl} LIKE ? ORDER BY sprz, id""", (wzor,)).fetchall()
+    rok_razem = conn.execute(
+        f"SELECT COALESCE(SUM(suma),0) AS s FROM invoices WHERE {data_rozl} LIKE ? AND {data_rozl} <= ?",
+        (f"{rok:04d}-%", f"{rok:04d}-{mies:02d}-99")).fetchone()["s"]
+    rok_osfiz = conn.execute(
+        f"SELECT COALESCE(SUM(suma),0) AS s FROM invoices WHERE osoba_fiz=1 AND {data_rozl} LIKE ? AND {data_rozl} <= ?",
+        (f"{rok:04d}-%", f"{rok:04d}-{mies:02d}-99")).fetchone()["s"]
+    conn.close()
+
+    faktury = [{"numer": r["numer"], "sprz": r["sprz"], "nabywca": r["nabywca"],
+                "osoba_fiz": bool(r["osoba_fiz"]), "status": r["status"] or "",
+                "kwota": float(r["suma"] or 0)} for r in rows]
+    razem = sum(f["kwota"] for f in faktury)
+    osfiz = sum(f["kwota"] for f in faktury if f["osoba_fiz"])
+    data = {
+        "wystawca": {"nazwa": st["nazwa"], "wordmark": st["wordmark"],
+                     "wordmark_sub": st["wordmark_sub"]},
+        "meta": {"miesiac": MIESIACE[mies - 1], "mm": f"{mies:02d}", "rok": str(rok),
+                 "wygenerowano": pdf_service.dzis()},
+        "faktury": faktury,
+        "sumy": {"razem": razem, "firmy": razem - osfiz, "osfiz": osfiz,
+                 "rok_razem": rok_razem, "rok_osfiz": rok_osfiz,
+                 "limit_vat": LIMIT_VAT, "limit_kasa": LIMIT_KASA},
+    }
+    folder = st["pdf_folder"] or os.path.join(os.path.expanduser("~"), "Wyceny-InstalPawel")
+    out = os.path.join(folder, f"Zestawienie_{rok:04d}-{mies:02d}.pdf")
+    try:
+        os.makedirs(folder, exist_ok=True)
+        from pdf_engine.zestawienie import generate_zestawienie_pdf
+        generate_zestawienie_pdf(data, out)
+    except Exception as e:
+        return jsonify(ok=False, blad=f"Błąd generowania PDF: {e}"), 500
+    _open_file(out)
+    return jsonify(ok=True, sciezka=out)
 
 
 # ================================================================== UMOWY

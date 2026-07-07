@@ -30,10 +30,19 @@
 </section>
 {% endif %}
 
-<div class="statrow">
+<div class="statrow statrow-3">
   <section class="card stat">
     <div class="stat-lab">Obrót w tym miesiącu</div>
     <div class="stat-val">{{ obrot_mies|money }}</div>
+  </section>
+  <section class="card stat">
+    <div class="stat-lab">Poprzedni miesiąc ({{ poprz_nazwa }}) — do rozliczenia</div>
+    <div class="stat-val">{{ obrot_poprz|money }}</div>
+    <div class="stat-sub mt">
+      <button class="btn btn-primary btn-sm" onclick="pobierzZestawienie(this, {{ poprz_rok }}, {{ poprz_mm }})">
+        📄 Pobierz PDF podsumowania
+      </button>
+    </div>
   </section>
   <section class="card stat">
     <div class="stat-lab">Niezapłacone faktury</div>
@@ -92,4 +101,21 @@
   <p class="muted">Jeszcze nic tu nie ma — zacznij od wyceny, umowy albo faktury (przyciski u góry).</p>
   {% endif %}
 </section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function pobierzZestawienie(btn, rok, mies) {
+  const t = btn.textContent;
+  btn.disabled = true; btn.textContent = "Generuję…";
+  fetch(`/api/zestawienie/${rok}/${mies}/pdf`, {method: "POST"})
+    .then(r => r.json())
+    .then(d => {
+      btn.disabled = false; btn.textContent = t;
+      if (!d.ok) { alert(d.blad || "Nie udało się wygenerować zestawienia."); return; }
+      // PDF zapisuje się w folderze dokumentów i otwiera automatycznie
+    })
+    .catch(e => { btn.disabled = false; btn.textContent = t; alert("Błąd: " + e); });
+}
+</script>
 {% endblock %}
