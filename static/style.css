@@ -105,7 +105,7 @@ select.status-odrzucona{color:var(--danger);border-color:#e6b8b5;background:#fbe
 .cennik-rob{background:#f7fafd;border:1px dashed var(--line);border-radius:8px;padding:10px 12px;margin-bottom:12px}
 
 /* ---- pulpit ---- */
-.statrow{display:grid;grid-template-columns:1fr 1fr 2fr;gap:18px;margin-bottom:18px}
+.statrow{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
 .stat{margin-bottom:0}
 .stat-lab{font-size:13px;font-weight:700;color:var(--grey);text-transform:uppercase;letter-spacing:.4px}
 .stat-val{font-size:26px;font-weight:800;color:var(--navy);margin-top:6px}

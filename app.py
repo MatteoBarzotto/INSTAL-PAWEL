@@ -204,6 +204,8 @@ def _assemble(conn, payload):
 # ------------------------------------------------------------------ EKRAN: pulpit
 # Limit zwolnienia podmiotowego z VAT (art. 113 ust. 1) — wartość sprzedaży w roku.
 LIMIT_VAT = 200_000.0
+# Limit zwolnienia z kasy fiskalnej — sprzedaż dla osób fizycznych bez działalności (rok).
+LIMIT_KASA = 20_000.0
 
 
 @app.route("/")
@@ -226,6 +228,9 @@ def index():
     obrot_mies = conn.execute(
         "SELECT COALESCE(SUM(suma),0) AS s FROM invoices WHERE wyst_date LIKE ?",
         (miesiac + "-%",)).fetchone()["s"]
+    obrot_osfiz = conn.execute(
+        "SELECT COALESCE(SUM(suma),0) AS s FROM invoices WHERE osoba_fiz=1 AND wyst_date LIKE ?",
+        (rok + "-%",)).fetchone()["s"]
     # ostatnie dokumenty (wszystkie typy razem, wg czasu utworzenia)
     ostatnie = []
     for typ, sql, edytuj in [
@@ -241,9 +246,11 @@ def index():
     ostatnie.sort(key=lambda d: d.get("created_at") or "", reverse=True)
     conn.close()
     procent_vat = min(100.0, obrot_rok / LIMIT_VAT * 100)
+    procent_kasa = min(100.0, obrot_osfiz / LIMIT_KASA * 100)
     return render_template("pulpit.html",
                            po_terminie=po_terminie, niezaplacone=niezaplacone,
                            obrot_rok=obrot_rok, obrot_mies=obrot_mies,
+                           obrot_osfiz=obrot_osfiz, limit_kasa=LIMIT_KASA, procent_kasa=procent_kasa,
                            limit_vat=LIMIT_VAT, procent_vat=procent_vat,
                            rok=rok, ostatnie=ostatnie[:8], dzis_iso=dzis_iso)
 
@@ -456,9 +463,9 @@ def wycena_na_fakture(qid):
         "toggles": {"blueprint": True, "regon": False, "bank": True, "klauzula": True},
     }
     cur = conn.execute(
-        "INSERT INTO invoices (numer, wyst_date, term_date, nabywca, suma, data_json) VALUES (?,?,?,?,?,?)",
+        "INSERT INTO invoices (numer, wyst_date, term_date, nabywca, suma, osoba_fiz, data_json) VALUES (?,?,?,?,?,?,?)",
         (numer, today.strftime("%Y-%m-%d"), termin, zam.get("nazwa", ""),
-         _suma_items(items), json.dumps(stan, ensure_ascii=False)))
+         _suma_items(items), _osoba_fiz(stan), json.dumps(stan, ensure_ascii=False)))
     new_id = cur.lastrowid
     conn.commit()
     conn.close()
@@ -772,6 +779,16 @@ def _faktura_context(conn, f):
     }
 
 
+def _osoba_fiz(stan):
+    """Osoba fizyczna = przełącznik na fakturze albo pusty NIP nabywcy.
+    Liczy się do limitu zwolnienia z kasy fiskalnej (20 000 zł/rok)."""
+    fields = stan.get("fields", {}) or {}
+    toggles = stan.get("toggles", {}) or {}
+    if "osoba_fiz" in toggles:
+        return 1 if toggles["osoba_fiz"] else 0
+    return 0 if (fields.get("n_nip") or "").strip() else 1
+
+
 @app.route("/api/faktura/zapisz", methods=["POST"])
 def api_faktura_zapisz():
     stan = request.get_json(force=True)
@@ -783,16 +800,17 @@ def api_faktura_zapisz():
     wyst = fields.get("m_wyst", "")
     termin = fields.get("m_term", "")
     nabywca = fields.get("n_nazwa", "")
+    osfiz = _osoba_fiz(stan)
     data_json = json.dumps(stan, ensure_ascii=False)
     fid = stan.get("id")
     if fid:
         conn.execute(
-            "UPDATE invoices SET numer=?, wyst_date=?, term_date=?, nabywca=?, suma=?, data_json=? WHERE id=?",
-            (numer, wyst, termin, nabywca, suma, data_json, fid))
+            "UPDATE invoices SET numer=?, wyst_date=?, term_date=?, nabywca=?, suma=?, osoba_fiz=?, data_json=? WHERE id=?",
+            (numer, wyst, termin, nabywca, suma, osfiz, data_json, fid))
     else:
         cur = conn.execute(
-            "INSERT INTO invoices (numer, wyst_date, term_date, nabywca, suma, data_json) VALUES (?,?,?,?,?,?)",
-            (numer, wyst, termin, nabywca, suma, data_json))
+            "INSERT INTO invoices (numer, wyst_date, term_date, nabywca, suma, osoba_fiz, data_json) VALUES (?,?,?,?,?,?,?)",
+            (numer, wyst, termin, nabywca, suma, osfiz, data_json))
         fid = cur.lastrowid
     conn.commit()
     conn.close()
@@ -815,8 +833,8 @@ def faktura_duplikuj(fid):
     stan["fields"]["m_wyst"] = today
     stan["fields"]["m_sprz"] = today
     cur = conn.execute(
-        "INSERT INTO invoices (numer, wyst_date, nabywca, suma, data_json) VALUES (?,?,?,?,?)",
-        (numer, today, f["nabywca"], f["suma"], json.dumps(stan, ensure_ascii=False)))
+        "INSERT INTO invoices (numer, wyst_date, nabywca, suma, osoba_fiz, data_json) VALUES (?,?,?,?,?,?)",
+        (numer, today, f["nabywca"], f["suma"], _osoba_fiz(stan), json.dumps(stan, ensure_ascii=False)))
     new_id = cur.lastrowid
     conn.commit()
     conn.close()
@@ -1002,9 +1020,9 @@ def umowa_na_fakture(uid):
         "toggles": {"blueprint": True, "regon": False, "bank": True, "klauzula": True},
     }
     cur = conn.execute(
-        "INSERT INTO invoices (numer, wyst_date, term_date, nabywca, suma, data_json) VALUES (?,?,?,?,?,?)",
+        "INSERT INTO invoices (numer, wyst_date, term_date, nabywca, suma, osoba_fiz, data_json) VALUES (?,?,?,?,?,?,?)",
         (numer, today.strftime("%Y-%m-%d"), termin, zam.get("nazwa", ""),
-         _suma_items(items), json.dumps(stan, ensure_ascii=False)))
+         _suma_items(items), _osoba_fiz(stan), json.dumps(stan, ensure_ascii=False)))
     new_id = cur.lastrowid
     conn.commit()
     conn.close()

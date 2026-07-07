@@ -33,6 +33,7 @@
   <div class="toggles">
     <label><input type="checkbox" id="t_blueprint" checked onchange="render()"> Kratka</label>
     <label><input type="checkbox" id="t_regon" checked onchange="render()"> REGON</label>
+    <label title="Nabywca bez NIP — liczy się do limitu kasy fiskalnej (20 tys. zł/rok)"><input type="checkbox" id="t_osfiz" onchange="render()"> Osoba fizyczna</label>
     <label><input type="checkbox" id="t_bank" checked onchange="render()"> Konto bank.</label>
     <label><input type="checkbox" id="t_klauzula" checked onchange="render()"> Klauzula VAT</label>
   </div>
@@ -79,7 +80,7 @@
         <div class="pbody">
           <div class="pname"><input class="f fb" id="n_nazwa" style="width:100%" placeholder="Nazwa nabywcy / Imię i nazwisko"></div>
           <div class="prow"><span class="k">Adres:</span> <input class="f fb" id="n_adres" style="flex:1" placeholder="ul. ..., 00-000 Miasto"></div>
-          <div class="prow"><span class="k">NIP:</span> <input class="f fb" id="n_nip" style="flex:1" placeholder="000-000-00-00"></div>
+          <div class="prow" id="n_nip_row"><span class="k">NIP:</span> <input class="f fb" id="n_nip" style="flex:1" placeholder="000-000-00-00"></div>
           <div class="prow" id="n_regon_row"><span class="k">REGON:</span> <input class="f fb" id="n_regon" style="flex:1" placeholder="000000000"></div>
         </div>
       </div>

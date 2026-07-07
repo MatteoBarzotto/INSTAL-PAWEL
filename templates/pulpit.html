@@ -40,6 +40,9 @@
     <div class="stat-val">{{ niezaplacone['s']|money }}</div>
     <div class="stat-sub">{{ niezaplacone['c'] }} szt.</div>
   </section>
+</div>
+
+<div class="statrow statrow-bary">
   <section class="card stat">
     <div class="stat-lab">Obrót {{ rok }} — limit zwolnienia z VAT (art. 113)</div>
     <div class="stat-val">{{ obrot_rok|money }} <span class="stat-sub">/ {{ limit_vat|money }}</span></div>
@@ -50,6 +53,19 @@
       tracisz zwolnienie z VAT. Porozmawiaj z księgową!</div>
     {% else %}
     <div class="stat-sub">Wykorzystane {{ '%.0f'|format(procent_vat) }}% — liczone z faktur wystawionych w {{ rok }} r.</div>
+    {% endif %}
+  </section>
+  <section class="card stat">
+    <div class="stat-lab">Sprzedaż dla osób fizycznych {{ rok }} — limit kasy fiskalnej</div>
+    <div class="stat-val">{{ obrot_osfiz|money }} <span class="stat-sub">/ {{ limit_kasa|money }}</span></div>
+    <div class="vatbar"><div class="vatfill {{ 'vat-ok' if procent_kasa < 50 else ('vat-uwaga' if procent_kasa < 80 else 'vat-alarm') }}"
+         style="width: {{ '%.1f'|format(procent_kasa) }}%"></div></div>
+    {% if procent_kasa >= 80 %}
+    <div class="stat-sub vat-ostrzezenie">⚠️ Zbliżasz się do limitu 20 000 zł sprzedaży dla osób prywatnych —
+      po jego przekroczeniu musisz mieć kasę fiskalną. Porozmawiaj z księgową!</div>
+    {% else %}
+    <div class="stat-sub">Wykorzystane {{ '%.0f'|format(procent_kasa) }}% — liczone z faktur bez NIP nabywcy
+      (oznaczonych „osoba fizyczna").</div>
     {% endif %}
   </section>
 </div>

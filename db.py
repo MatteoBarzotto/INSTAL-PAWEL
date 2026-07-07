@@ -106,9 +106,22 @@ def _migrate(conn):
         cols = [r[1] for r in conn.execute(f"PRAGMA table_info({table})")]
         if col not in cols:
             conn.execute(f"ALTER TABLE {table} ADD COLUMN {ddl}")
+            return True
+        return False
     addcol("quotes", "status", "status TEXT DEFAULT 'szkic'")
     addcol("invoices", "status", "status TEXT DEFAULT 'niezapłacona'")
     addcol("invoices", "term_date", "term_date TEXT")
+    # osoba_fiz: 1 = nabywca to osoba fizyczna bez NIP (limit kasy fiskalnej 20 000 zł/rok)
+    if addcol("invoices", "osoba_fiz", "osoba_fiz INTEGER DEFAULT 0"):
+        # uzupełnij istniejące faktury: brak NIP nabywcy = osoba fizyczna
+        for r in conn.execute("SELECT id, data_json FROM invoices").fetchall():
+            try:
+                stan = json.loads(r[1] or "{}")
+                nip = (stan.get("fields", {}).get("n_nip") or "").strip()
+            except (ValueError, TypeError):
+                nip = "x"  # nie da się ocenić — zostaw 0
+            if not nip:
+                conn.execute("UPDATE invoices SET osoba_fiz=1 WHERE id=?", (r[0],))
     conn.commit()
 
 

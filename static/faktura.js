@@ -50,8 +50,10 @@ function oblicz() {
 /* ---------------------------------------------------- przełączniki widoczności */
 function render() {
   document.getElementById("blueprint").style.display = document.getElementById("t_blueprint").checked ? "block" : "none";
+  const osfiz = document.getElementById("t_osfiz").checked;
   document.getElementById("s_regon_row").style.display = document.getElementById("t_regon").checked ? "" : "none";
-  document.getElementById("n_regon_row").style.display = document.getElementById("t_regon").checked ? "" : "none";
+  document.getElementById("n_regon_row").style.display = (document.getElementById("t_regon").checked && !osfiz) ? "" : "none";
+  document.getElementById("n_nip_row").style.display = osfiz ? "none" : "";
   document.getElementById("p_bank_row").style.display = document.getElementById("t_bank").checked ? "" : "none";
   document.getElementById("klauzulaBox").style.display = document.getElementById("t_klauzula").checked ? "" : "none";
   autoGrow(document.getElementById("klauzula"));
@@ -69,6 +71,7 @@ function zbierzStan() {
     toggles: {
       blueprint: document.getElementById("t_blueprint").checked,
       regon: document.getElementById("t_regon").checked,
+      osoba_fiz: document.getElementById("t_osfiz").checked,
       bank: document.getElementById("t_bank").checked,
       klauzula: document.getElementById("t_klauzula").checked,
     },
@@ -82,6 +85,7 @@ function wczytajStan(o) {
   if (o.toggles) {
     document.getElementById("t_blueprint").checked = !!o.toggles.blueprint;
     document.getElementById("t_regon").checked = !!o.toggles.regon;
+    document.getElementById("t_osfiz").checked = !!o.toggles.osoba_fiz;
     document.getElementById("t_bank").checked = !!o.toggles.bank;
     document.getElementById("t_klauzula").checked = !!o.toggles.klauzula;
   }
