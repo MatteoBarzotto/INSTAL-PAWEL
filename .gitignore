@@ -17,3 +17,6 @@ FAKTURA/*.zip
 .obsidian/
 .claude/
 **/.claude/
+
+# token do aktualizacji z prywatnego repo (tworzony ręcznie na komputerze Pawła)
+github_token.txt

@@ -26,11 +26,41 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 
 REPO   = "MatteoBarzotto/INSTAL-PAWEL"
 BRANCH = "stable"   # tylko sprawdzone wersje trafiają na ten branch
-URL_WERSJA = f"https://raw.githubusercontent.com/{REPO}/{BRANCH}/wersja.txt"
-URL_ZIP    = f"https://codeload.github.com/{REPO}/zip/refs/heads/{BRANCH}"
 
 # tych rzeczy aktualizacja nigdy nie nadpisuje ani nie usuwa
-CHRONIONE = {"dane.db", ".venv", ".git", "__pycache__"}
+CHRONIONE = {"dane.db", ".venv", ".git", "__pycache__", "github_token.txt"}
+
+
+def _token():
+    """Token GitHuba (tylko-odczyt) — potrzebny, gdy repo jest prywatne.
+    Plik `github_token.txt` obok app.py, poza repo (.gitignore)."""
+    try:
+        with open(os.path.join(HERE, "github_token.txt"), encoding="utf-8") as f:
+            return f.read().strip() or None
+    except OSError:
+        return None
+
+
+def _pobierz(url, timeout, naglowki=None):
+    req = urllib.request.Request(url, headers={"User-Agent": "instal-pawel-app",
+                                               **(naglowki or {})})
+    tok = _token()
+    if tok:
+        req.add_header("Authorization", "Bearer " + tok)
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return r.read()
+
+
+def _url_wersja():
+    if _token():  # prywatne repo -> GitHub API
+        return f"https://api.github.com/repos/{REPO}/contents/wersja.txt?ref={BRANCH}"
+    return f"https://raw.githubusercontent.com/{REPO}/{BRANCH}/wersja.txt"
+
+
+def _url_zip():
+    if _token():
+        return f"https://api.github.com/repos/{REPO}/zipball/{BRANCH}"
+    return f"https://codeload.github.com/{REPO}/zip/refs/heads/{BRANCH}"
 
 
 def wersja_lokalna():
@@ -43,9 +73,8 @@ def wersja_lokalna():
 
 def wersja_zdalna(timeout=10):
     """Numer wersji z brancha `stable` na GitHubie. Rzuca wyjątek przy braku internetu."""
-    req = urllib.request.Request(URL_WERSJA, headers={"User-Agent": "instal-pawel-app"})
-    with urllib.request.urlopen(req, timeout=timeout) as r:
-        return r.read().decode("utf-8").strip()
+    naglowki = {"Accept": "application/vnd.github.raw+json"} if _token() else None
+    return _pobierz(_url_wersja(), timeout, naglowki).decode("utf-8").strip()
 
 
 def _jako_liczby(w):
@@ -88,9 +117,7 @@ def aktualizuj(folder_kopii, timeout=60):
     pliki podmieniamy dopiero PO udanym pobraniu i rozpakowaniu całości.
     """
     # 1. pobierz ZIP repo do pamięci
-    req = urllib.request.Request(URL_ZIP, headers={"User-Agent": "instal-pawel-app"})
-    with urllib.request.urlopen(req, timeout=timeout) as r:
-        blob = r.read()
+    blob = _pobierz(_url_zip(), timeout)
 
     # 2. rozpakuj do folderu tymczasowego
     tmp = os.path.join(HERE, ".aktualizacja_tmp")
