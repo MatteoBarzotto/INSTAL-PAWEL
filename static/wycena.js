@@ -162,11 +162,11 @@ function zapisz(zGenerowaniem) {
   }).then((r) => r.json()).then((d) => {
     if (!d.ok) { alert("Nie udało się zapisać."); return; }
     $("quote-id").value = d.id;
-    if (!zGenerowaniem) { window.location = "/"; return; }
+    if (!zGenerowaniem) { zmianyZapisane(); window.location = "/wyceny"; return; }
     fetch(`/api/wycena/${d.id}/pdf`, { method: "POST" })
       .then((r) => r.json()).then((p) => {
         if (!p.ok) { alert(p.blad || "Błąd PDF."); return; }
-        window.location = "/";
+        zmianyZapisane(); window.location = "/wyceny";
       });
   }).catch((e) => alert("Błąd: " + e));
 }

@@ -6,7 +6,7 @@
   <a class="btn" href="{{ url_for('umowy') }}">← Lista umów</a>
 </div>
 
-<form method="post" action="{{ url_for('umowa_zapisz') }}" id="umowaForm">
+<form method="post" action="{{ url_for('umowa_zapisz') }}" id="umowaForm" class="pilnuj">
   {% if u %}<input type="hidden" name="id" value="{{ u['id'] }}">{% endif %}
   <input type="hidden" name="po_zapisie" id="po_zapisie" value="">
 
@@ -100,6 +100,7 @@ function slownie() {
   document.getElementById("sumaLive").textContent = money(k);
 }
 function zapiszIPdf() {
+  zmianyZapisane();
   document.getElementById("po_zapisie").value = "pdf";
   document.getElementById("umowaForm").submit();
 }

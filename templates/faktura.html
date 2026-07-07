@@ -40,7 +40,7 @@
 <div id="hint" class="no-print">Klikaj w pola, aby edytować. Sumy i kwota słownie liczą się automatycznie. „Zapisz i drukuj / PDF" → w oknie druku wybierz „Zapisz jako PDF".</div>
 
 <!-- ===== ARKUSZ ===== -->
-<div id="sheet">
+<div id="sheet" class="pilnuj">
   <div class="accent"></div>
 
   <header class="head">
@@ -156,6 +156,7 @@
   const DZIS_ISO = {{ dzis_iso|tojson }};
   const CLIENTS = {{ clients_json|tojson }};
 </script>
+<script src="{{ url_for('static', filename='pomocnicze.js') }}"></script>
 <script src="{{ url_for('static', filename='lib/kwoty.js') }}"></script>
 <script src="{{ url_for('static', filename='faktura.js') }}"></script>
 </body>

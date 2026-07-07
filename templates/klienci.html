@@ -25,6 +25,7 @@
 
 <section class="card">
   <h2>Lista klientów ({{ clients|length }})</h2>
+  <div class="szukajka"><input type="search" placeholder="🔍 Szukaj klienta..." oninput="filtrujTabele(this)"></div>
   <table class="grid">
     <thead><tr><th>Nazwa</th><th>Adres</th><th>Kontakt</th><th class="actions">Działania</th></tr></thead>
     <tbody>
@@ -34,6 +35,8 @@
         <td>{{ c['adres_html']|safe }}</td>
         <td>{{ c['kontakt_html']|safe }}</td>
         <td class="actions">
+          <a class="btn btn-sm" href="{{ url_for('klient_dokumenty', cid=c['id']) }}"
+             title="Wyceny, umowy i faktury tego klienta">Dokumenty</a>
           <button class="btn btn-sm" type="button"
             onclick='edytuj({{ {"id":c["id"],"nazwa":c["nazwa"],"adres_html":c["adres_html"],"kontakt_html":c["kontakt_html"]}|tojson }})'>Edytuj</button>
           <form method="post" action="{{ url_for('klienci_usun', cid=c['id']) }}" class="inline"

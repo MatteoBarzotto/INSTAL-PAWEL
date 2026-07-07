@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Dokumenty — {{ c['nazwa'] }} — INSTAL-PAWEŁ{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Dokumenty: {{ c['nazwa'] }}</h1>
+  <a class="btn" href="{{ url_for('klienci') }}">← Klienci</a>
+</div>
+
+{% if dokumenty %}
+<table class="grid">
+  <thead><tr><th>Typ</th><th>Numer</th><th class="r">Kwota</th><th class="c">Status</th><th>Utworzono</th><th class="actions"></th></tr></thead>
+  <tbody>
+    {% for d in dokumenty %}
+    <tr>
+      <td>{{ {'wycena':'📋 Wycena','umowa':'📝 Umowa','faktura':'🧾 Faktura'}[d['typ']] }}</td>
+      <td class="mono">{{ d['numer'] }}</td>
+      <td class="r nowrap">{{ d['kwota']|money }}</td>
+      <td class="c">{{ d['status'] or '—' }}</td>
+      <td>{{ (d['created_at'] or '')[:10] }}</td>
+      <td class="actions"><a class="btn btn-sm" href="{{ url_for(d['edytuj'], **{('qid' if d['typ']=='wycena' else ('uid' if d['typ']=='umowa' else 'fid')): d['id']}) }}">Otwórz</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="empty"><p>Ten klient nie ma jeszcze żadnych dokumentów.</p></div>
+{% endif %}
+{% endblock %}

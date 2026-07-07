@@ -28,7 +28,8 @@
 
 <section class="card">
   <h2>Produkty ({{ products|length }})</h2>
-  <table class="grid">
+  <div class="szukajka"><input type="search" placeholder="🔍 Szukaj (numer, klient, rok...)" oninput="filtrujTabele(this)"></div>
+<table class="grid">
     <thead><tr><th>Nazwa</th><th>Kategoria</th><th>j.m.</th><th class="r">Cena brutto</th><th class="c">Spec.</th><th class="actions">Działania</th></tr></thead>
     <tbody>
       {% for p in products %}

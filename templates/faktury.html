@@ -7,6 +7,7 @@
 </div>
 
 {% if invoices %}
+<div class="szukajka"><input type="search" placeholder="🔍 Szukaj (numer, klient, rok...)" oninput="filtrujTabele(this)"></div>
 <table class="grid">
   <thead>
     <tr><th>Numer</th><th>Data wystawienia</th><th>Nabywca</th><th class="r">Do zapłaty</th><th class="c">Status</th><th class="actions">Działania</th></tr>

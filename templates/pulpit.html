@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Pulpit — INSTAL-PAWEŁ{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Pulpit</h1>
+  <div class="actions">
+    <a class="btn btn-primary" href="{{ url_for('wycena_nowa') }}">+ Wycena</a>
+    <a class="btn btn-primary" href="{{ url_for('umowa_nowa') }}">+ Umowa</a>
+    <a class="btn btn-primary" href="{{ url_for('faktura_nowa') }}">+ Faktura</a>
+  </div>
+</div>
+
+{% if po_terminie %}
+<section class="card alertcard">
+  <h2>⚠️ Faktury po terminie płatności — upomnij się o pieniądze</h2>
+  <table class="grid">
+    <thead><tr><th>Numer</th><th>Nabywca</th><th>Termin minął</th><th class="r">Kwota</th><th class="actions"></th></tr></thead>
+    <tbody>
+      {% for f in po_terminie %}
+      <tr>
+        <td class="mono">{{ f['numer'] }}</td>
+        <td>{{ f['nabywca'] or '—' }}</td>
+        <td><span class="badge badge-late">{{ f['term_date'] }}</span></td>
+        <td class="r nowrap"><b>{{ f['suma']|money }}</b></td>
+        <td class="actions"><a class="btn btn-sm" href="{{ url_for('faktura_edytuj', fid=f['id']) }}">Otwórz</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+
+<div class="statrow">
+  <section class="card stat">
+    <div class="stat-lab">Obrót w tym miesiącu</div>
+    <div class="stat-val">{{ obrot_mies|money }}</div>
+  </section>
+  <section class="card stat">
+    <div class="stat-lab">Niezapłacone faktury</div>
+    <div class="stat-val">{{ niezaplacone['s']|money }}</div>
+    <div class="stat-sub">{{ niezaplacone['c'] }} szt.</div>
+  </section>
+  <section class="card stat">
+    <div class="stat-lab">Obrót {{ rok }} — limit zwolnienia z VAT (art. 113)</div>
+    <div class="stat-val">{{ obrot_rok|money }} <span class="stat-sub">/ {{ limit_vat|money }}</span></div>
+    <div class="vatbar"><div class="vatfill {{ 'vat-ok' if procent_vat < 50 else ('vat-uwaga' if procent_vat < 80 else 'vat-alarm') }}"
+         style="width: {{ '%.1f'|format(procent_vat) }}%"></div></div>
+    {% if procent_vat >= 80 %}
+    <div class="stat-sub vat-ostrzezenie">⚠️ Zbliżasz się do limitu 200 000 zł — po jego przekroczeniu
+      tracisz zwolnienie z VAT. Porozmawiaj z księgową!</div>
+    {% else %}
+    <div class="stat-sub">Wykorzystane {{ '%.0f'|format(procent_vat) }}% — liczone z faktur wystawionych w {{ rok }} r.</div>
+    {% endif %}
+  </section>
+</div>
+
+<section class="card">
+  <h2>Ostatnie dokumenty</h2>
+  {% if ostatnie %}
+  <table class="grid">
+    <thead><tr><th>Typ</th><th>Numer</th><th>Klient</th><th class="r">Kwota</th><th class="c">Status</th><th class="actions"></th></tr></thead>
+    <tbody>
+      {% for d in ostatnie %}
+      <tr>
+        <td>{{ {'wycena':'📋 Wycena','umowa':'📝 Umowa','faktura':'🧾 Faktura'}[d['typ']] }}</td>
+        <td class="mono">{{ d['numer'] }}</td>
+        <td>{{ d['kto'] or '—' }}</td>
+        <td class="r nowrap">{{ d['kwota']|money }}</td>
+        <td class="c">{{ d['status'] or '—' }}</td>
+        <td class="actions"><a class="btn btn-sm" href="{{ url_for(d['edytuj'], **{('qid' if d['typ']=='wycena' else ('uid' if d['typ']=='umowa' else 'fid')): d['id']}) }}">Otwórz</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">Jeszcze nic tu nie ma — zacznij od wyceny, umowy albo faktury (przyciski u góry).</p>
+  {% endif %}
+</section>
+{% endblock %}

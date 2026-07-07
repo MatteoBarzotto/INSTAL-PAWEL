@@ -24,6 +24,36 @@ app.secret_key = "instal-pawel-local"  # tylko dla flash() – aplikacja lokalna
 db.init_db()
 
 
+def _auto_backup():
+    """Automatyczna kopia bazy raz dziennie przy starcie programu.
+    Pliki `dane_auto_RRRR-MM-DD.db` w „Kopie zapasowe/auto", trzymamy 10 ostatnich."""
+    import sqlite3
+    try:
+        conn = db.get_db()
+        st = conn.execute("SELECT * FROM settings WHERE id=1").fetchone()
+        conn.close()
+        folder = os.path.join(
+            (st["pdf_folder"] if st else "") or os.path.join(os.path.expanduser("~"), "Wyceny-InstalPawel"),
+            "Kopie zapasowe", "auto")
+        os.makedirs(folder, exist_ok=True)
+        cel = os.path.join(folder, "dane_auto_" + datetime.date.today().strftime("%Y-%m-%d") + ".db")
+        if os.path.exists(cel):
+            return  # dzisiejsza kopia już jest
+        src = db.get_db()
+        dst = sqlite3.connect(cel)
+        src.backup(dst)
+        dst.close()
+        src.close()
+        stare = sorted(f for f in os.listdir(folder) if f.startswith("dane_auto_") and f.endswith(".db"))
+        for f in stare[:-10]:
+            os.remove(os.path.join(folder, f))
+    except Exception:
+        pass  # kopia nie może zablokować startu programu
+
+
+_auto_backup()
+
+
 # ------------------------------------------------------------------ pomocnicze
 def _settings(conn):
     return conn.execute("SELECT * FROM settings WHERE id=1").fetchone()
@@ -171,14 +201,61 @@ def _assemble(conn, payload):
     return data, suma, client
 
 
-# ------------------------------------------------------------------ EKRAN: lista wycen
+# ------------------------------------------------------------------ EKRAN: pulpit
+# Limit zwolnienia podmiotowego z VAT (art. 113 ust. 1) — wartość sprzedaży w roku.
+LIMIT_VAT = 200_000.0
+
+
 @app.route("/")
 def index():
+    """Pulpit: faktury po terminie, obrót roczny vs limit VAT, ostatnie dokumenty."""
+    conn = db.get_db()
+    dzis_iso = datetime.date.today().strftime("%Y-%m-%d")
+    rok = datetime.date.today().strftime("%Y")
+    miesiac = datetime.date.today().strftime("%Y-%m")
+    po_terminie = conn.execute(
+        """SELECT * FROM invoices WHERE status='niezapłacona'
+           AND term_date IS NOT NULL AND term_date != '' AND term_date < ?
+           ORDER BY term_date""", (dzis_iso,)).fetchall()
+    niezaplacone = conn.execute(
+        "SELECT COUNT(*) AS c, COALESCE(SUM(suma),0) AS s FROM invoices WHERE status='niezapłacona'"
+    ).fetchone()
+    obrot_rok = conn.execute(
+        "SELECT COALESCE(SUM(suma),0) AS s FROM invoices WHERE wyst_date LIKE ?",
+        (rok + "-%",)).fetchone()["s"]
+    obrot_mies = conn.execute(
+        "SELECT COALESCE(SUM(suma),0) AS s FROM invoices WHERE wyst_date LIKE ?",
+        (miesiac + "-%",)).fetchone()["s"]
+    # ostatnie dokumenty (wszystkie typy razem, wg czasu utworzenia)
+    ostatnie = []
+    for typ, sql, edytuj in [
+        ("wycena", "SELECT id, numer, client_nazwa AS kto, suma AS kwota, status, created_at FROM quotes", "wycena_edytuj"),
+        ("umowa", "SELECT id, numer, client_nazwa AS kto, kwota, status, created_at FROM contracts", "umowa_edytuj"),
+        ("faktura", "SELECT id, numer, nabywca AS kto, suma AS kwota, status, created_at FROM invoices", "faktura_edytuj"),
+    ]:
+        for r in conn.execute(sql + " ORDER BY id DESC LIMIT 8"):
+            d = dict(r)
+            d["typ"] = typ
+            d["edytuj"] = edytuj
+            ostatnie.append(d)
+    ostatnie.sort(key=lambda d: d.get("created_at") or "", reverse=True)
+    conn.close()
+    procent_vat = min(100.0, obrot_rok / LIMIT_VAT * 100)
+    return render_template("pulpit.html",
+                           po_terminie=po_terminie, niezaplacone=niezaplacone,
+                           obrot_rok=obrot_rok, obrot_mies=obrot_mies,
+                           limit_vat=LIMIT_VAT, procent_vat=procent_vat,
+                           rok=rok, ostatnie=ostatnie[:8], dzis_iso=dzis_iso)
+
+
+# ------------------------------------------------------------------ EKRAN: lista wycen
+@app.route("/wyceny")
+def wyceny():
     conn = db.get_db()
     quotes = conn.execute(
         "SELECT * FROM quotes ORDER BY id DESC").fetchall()
     conn.close()
-    return render_template("index.html", quotes=quotes)
+    return render_template("wyceny.html", quotes=quotes)
 
 
 # ------------------------------------------------------------------ EKRAN: nowa / edycja wyceny
@@ -317,7 +394,7 @@ def wycena_status(qid):
         conn.execute("UPDATE quotes SET status=? WHERE id=?", (s, qid))
         conn.commit()
         conn.close()
-    return redirect(url_for("index"))
+    return redirect(url_for("wyceny"))
 
 
 def _ilosc_na_czesci(ilosc_txt, brutto):
@@ -396,7 +473,7 @@ def wycena_usun(qid):
     conn.commit()
     conn.close()
     flash("Wycena usunięta.", "ok")
-    return redirect(url_for("index"))
+    return redirect(url_for("wyceny"))
 
 
 # ------------------------------------------------------------------ EKRAN: katalog produktów
@@ -484,6 +561,33 @@ def klienci_zapisz():
         return jsonify(ok=True, id=new_id, nazwa=args[0])
     flash("Zapisano klienta.", "ok")
     return redirect(url_for("klienci"))
+
+
+@app.route("/klienci/<int:cid>/dokumenty")
+def klient_dokumenty(cid):
+    """Wszystkie dokumenty klienta: wyceny i umowy po client_id, faktury po nazwie nabywcy."""
+    conn = db.get_db()
+    c = conn.execute("SELECT * FROM clients WHERE id=?", (cid,)).fetchone()
+    if not c:
+        conn.close()
+        abort(404)
+    dokumenty = []
+    for typ, sql, args, edytuj in [
+        ("wycena", "SELECT id, numer, client_nazwa AS kto, suma AS kwota, status, created_at "
+                   "FROM quotes WHERE client_id=?", (cid,), "wycena_edytuj"),
+        ("umowa", "SELECT id, numer, client_nazwa AS kto, kwota, status, created_at "
+                  "FROM contracts WHERE client_id=?", (cid,), "umowa_edytuj"),
+        ("faktura", "SELECT id, numer, nabywca AS kto, suma AS kwota, status, created_at "
+                    "FROM invoices WHERE nabywca=?", (c["nazwa"],), "faktura_edytuj"),
+    ]:
+        for r in conn.execute(sql, args):
+            d = dict(r)
+            d["typ"] = typ
+            d["edytuj"] = edytuj
+            dokumenty.append(d)
+    conn.close()
+    dokumenty.sort(key=lambda d: d.get("created_at") or "", reverse=True)
+    return render_template("klient_dokumenty.html", c=c, dokumenty=dokumenty)
 
 
 @app.route("/klienci/<int:cid>/usun", methods=["POST"])
@@ -832,7 +936,81 @@ def umowy():
     conn = db.get_db()
     rows = conn.execute("SELECT * FROM contracts ORDER BY id DESC").fetchall()
     conn.close()
-    return render_template("umowy.html", contracts=rows)
+    contracts = []
+    for r in rows:
+        d = dict(r)
+        try:
+            wyn = (json.loads(r["data_json"] or "{}").get("wynagrodzenie") or {})
+            d["ma_zaliczke"] = float(wyn.get("zaliczka") or 0) > 0
+        except (ValueError, TypeError):
+            d["ma_zaliczke"] = False
+        contracts.append(d)
+    return render_template("umowy.html", contracts=contracts)
+
+
+@app.route("/umowa/<int:uid>/na-fakture", methods=["POST"])
+def umowa_na_fakture(uid):
+    """Faktura z umowy: rodzaj=zaliczkowa (na kwotę zaliczki) lub koncowa
+    (wynagrodzenie pomniejszone o zaliczkę)."""
+    rodzaj = request.form.get("rodzaj", "koncowa")
+    conn = db.get_db()
+    u = conn.execute("SELECT * FROM contracts WHERE id=?", (uid,)).fetchone()
+    if not u or not u["data_json"]:
+        conn.close()
+        abort(404)
+    ud = json.loads(u["data_json"])
+    st = _settings(conn)
+    zam = ud.get("zamawiajacy", {})
+    adres = (zam.get("adres_html", "") or "").replace("<br/>", ", ").replace("<br>", ", ").strip(" ,")
+    wyn = ud.get("wynagrodzenie") or {}
+    kwota = float(wyn.get("kwota") or 0)
+    zaliczka = float(wyn.get("zaliczka") or 0)
+    przedmiot = ud.get("przedmiot", "")
+    numer_um = u["numer"] or ""
+
+    if rodzaj == "zaliczkowa":
+        if zaliczka <= 0:
+            conn.close()
+            flash("Ta umowa nie ma zaliczki — wystaw fakturę końcową.", "ok")
+            return redirect(url_for("umowy"))
+        items = [{"nazwa": f"Zaliczka zgodnie z umową nr {numer_um} — {przedmiot}",
+                  "ilosc": "1", "jm": "usł.", "cena": f"{zaliczka:.2f}".replace(".", ",")}]
+    else:
+        do_zaplaty = max(0.0, kwota - zaliczka)
+        nazwa = f"{przedmiot} — zgodnie z umową nr {numer_um}"
+        if zaliczka > 0:
+            nazwa += f" (po rozliczeniu zaliczki {money(zaliczka)})"
+        items = [{"nazwa": nazwa, "ilosc": "1", "jm": "usł.",
+                  "cena": f"{do_zaplaty:.2f}".replace(".", ",")}]
+
+    today = datetime.date.today()
+    termin = (today + datetime.timedelta(days=14)).strftime("%Y-%m-%d")
+    numer = _next_faktura_numer(conn)
+    stan = {
+        "fields": {
+            "m_numer": numer, "m_wyst": today.strftime("%Y-%m-%d"),
+            "m_sprz": today.strftime("%Y-%m-%d"), "m_term": termin,
+            "s_nazwa": st["nazwa"] or "", "s_adres": st["adres"] or "",
+            "s_nip": st["nip"] or "", "s_regon": "",
+            "n_nazwa": zam.get("nazwa", ""), "n_adres": adres, "n_nip": "", "n_regon": "",
+            "p_sposob": "Przelew", "p_bank": "", "p_konto": "",
+            "klauzula": "Robocizna zwolniona z podatku VAT na podstawie art. 113 ust. 1 (i ust. 9) "
+                        "ustawy z dnia 11 marca 2004 r. o podatku od towarów i usług.",
+            "f_tel": st["tel"] or "", "f_mail": st["email"] or "",
+        },
+        "items": items,
+        "toggles": {"blueprint": True, "regon": False, "bank": True, "klauzula": True},
+    }
+    cur = conn.execute(
+        "INSERT INTO invoices (numer, wyst_date, term_date, nabywca, suma, data_json) VALUES (?,?,?,?,?,?)",
+        (numer, today.strftime("%Y-%m-%d"), termin, zam.get("nazwa", ""),
+         _suma_items(items), json.dumps(stan, ensure_ascii=False)))
+    new_id = cur.lastrowid
+    conn.commit()
+    conn.close()
+    opis = "zaliczkową" if rodzaj == "zaliczkowa" else "końcową"
+    flash(f"Utworzono fakturę {opis} {numer} z umowy {numer_um} — sprawdź i zapisz.", "ok")
+    return redirect(url_for("faktura_edytuj", fid=new_id))
 
 
 UMOWA_STATUSES = ["szkic", "podpisana", "zakończona"]

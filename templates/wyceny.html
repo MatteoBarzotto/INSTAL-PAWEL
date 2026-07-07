@@ -7,6 +7,7 @@
 </div>
 
 {% if quotes %}
+<div class="szukajka"><input type="search" placeholder="🔍 Szukaj (numer, klient, rok...)" oninput="filtrujTabele(this)"></div>
 <table class="grid">
   <thead>
     <tr><th>Numer</th><th>Data</th><th>Klient</th><th class="r">Suma</th><th class="c">Status</th><th class="actions">Działania</th></tr>

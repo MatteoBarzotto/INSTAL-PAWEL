@@ -7,6 +7,7 @@
 </div>
 
 {% if contracts %}
+<div class="szukajka"><input type="search" placeholder="🔍 Szukaj (numer, klient, rok...)" oninput="filtrujTabele(this)"></div>
 <table class="grid">
   <thead>
     <tr><th>Numer</th><th>Data zawarcia</th><th>Klient</th><th class="r">Kwota</th><th class="c">Status</th><th class="actions">Działania</th></tr>
@@ -29,6 +30,18 @@
       </td>
       <td class="actions">
         <button class="btn btn-primary btn-sm" onclick="genPdf({{ u['id'] }}, this)">Generuj PDF</button>
+        {% if u['ma_zaliczke'] %}
+        <form method="post" action="{{ url_for('umowa_na_fakture', uid=u['id']) }}" class="inline"
+              onsubmit="return confirm('Wystawić fakturę zaliczkową do tej umowy?');">
+          <input type="hidden" name="rodzaj" value="zaliczkowa">
+          <button class="btn btn-sm" type="submit" title="Faktura na kwotę zaliczki z umowy">→ FV zaliczka</button>
+        </form>
+        {% endif %}
+        <form method="post" action="{{ url_for('umowa_na_fakture', uid=u['id']) }}" class="inline"
+              onsubmit="return confirm('Wystawić fakturę końcową do tej umowy?{% if u['ma_zaliczke'] %} (kwota pomniejszona o zaliczkę){% endif %}');">
+          <input type="hidden" name="rodzaj" value="koncowa">
+          <button class="btn btn-sm" type="submit" title="Faktura końcowa z umowy">→ Faktura</button>
+        </form>
         <a class="btn btn-sm" href="{{ url_for('umowa_edytuj', uid=u['id']) }}">Edytuj</a>
         <form method="post" action="{{ url_for('umowa_duplikuj', uid=u['id']) }}" class="inline">
           <button class="btn btn-sm" type="submit">Duplikuj</button>

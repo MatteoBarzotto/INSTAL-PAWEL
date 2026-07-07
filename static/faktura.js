@@ -95,6 +95,7 @@ function zapiszFakture(cicho) {
   }).then((r) => r.json()).then((d) => {
     if (!d.ok) throw new Error("Zapis nie powiódł się");
     currentId = d.id;
+    if (typeof zmianyZapisane === "function") zmianyZapisane();
     // po pierwszym zapisie podmień URL na /faktura/<id>/edytuj (bez przeładowania)
     if (history.replaceState) history.replaceState(null, "", "/faktura/" + d.id + "/edytuj");
     if (!cicho) flashInfo("Zapisano fakturę.");

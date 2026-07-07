@@ -104,6 +104,24 @@ select.status-odrzucona{color:var(--danger);border-color:#e6b8b5;background:#fbe
 .badge-late:hover{background:#9a1f18}
 .cennik-rob{background:#f7fafd;border:1px dashed var(--line);border-radius:8px;padding:10px 12px;margin-bottom:12px}
 
+/* ---- pulpit ---- */
+.statrow{display:grid;grid-template-columns:1fr 1fr 2fr;gap:18px;margin-bottom:18px}
+.stat{margin-bottom:0}
+.stat-lab{font-size:13px;font-weight:700;color:var(--grey);text-transform:uppercase;letter-spacing:.4px}
+.stat-val{font-size:26px;font-weight:800;color:var(--navy);margin-top:6px}
+.stat-val .stat-sub{font-size:14px;font-weight:600}
+.stat-sub{font-size:13px;color:var(--grey);margin-top:4px}
+.vatbar{height:12px;background:#e3eaf1;border-radius:7px;margin-top:10px;overflow:hidden;border:1px solid var(--line)}
+.vatfill{height:100%;border-radius:7px 0 0 7px;transition:width .3s}
+.vat-ok{background:#3d9950}
+.vat-uwaga{background:var(--orange)}
+.vat-alarm{background:var(--danger)}
+.vat-ostrzezenie{color:var(--danger);font-weight:700}
+.alertcard{border:2px solid var(--danger)}
+.alertcard h2{border-left-color:var(--danger);color:var(--danger)}
+.szukajka{max-width:340px;margin-bottom:14px}
+.szukajka input{margin-top:0}
+
 /* ---- misc ---- */
 .flash{padding:11px 16px;border-radius:8px;margin-bottom:16px;font-weight:600}
 .flash-ok{background:#e6f4ea;color:var(--ok);border:1px solid #b6ddc0}
