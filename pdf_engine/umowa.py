@@ -170,9 +170,10 @@ def generate_umowa_pdf(data, out_path):
               "przelewem na rachunek bankowy Wykonawcy lub gotówką, w terminie 7 dni od dnia "
               "odbioru prac i wystawienia faktury."))
     klauzula = data.get("klauzula_vat",
-        "Robocizna zwolniona z podatku VAT na podstawie art. 113 ust. 1 ustawy z dnia "
-        "11 marca 2004 r. o podatku od towarów i usług (zwolnienie podmiotowe). "
-        "Ceny materiałów podano w kwotach brutto.")
+        "Robocizna (usługa montażu i uruchomienia) jest zwolniona z podatku VAT na podstawie "
+        "<b>art. 113 ust. 1 (i ust. 9) ustawy z dnia 11 marca 2004 r. o podatku od towarów "
+        "i usług</b> (zwolnienie podmiotowe) — do wartości robocizny nie dolicza się podatku VAT. "
+        "Ceny materiałów podano w kwotach brutto (zawierają podatek VAT).")
     if klauzula:
         pw.append(klauzula)
     story += punkty(pw)
@@ -306,7 +307,7 @@ if __name__ == "__main__":
         "zamawiajacy": {"nazwa": "Jan Nowak", "adres_html": "ul. Ogrodowa 12<br/>62-300 Września",
                         "kontakt_html": "tel. 600 100 200"},
         "meta": {"tytul": "UMOWA", "numer": "01/07/2026", "data": "07.07.2026",
-                 "miejscowosc": "Września"},
+                 "miejscowosc": "Wrześni"},
         "przedmiot": "wykonanie instalacji elektrycznej w budynku mieszkalnym jednorodzinnym "
                      "przy ul. Ogrodowej 12 we Wrześni",
         "zakres": ["ułożenie okablowania i osprzętu wg ustaleń z Zamawiającym",
