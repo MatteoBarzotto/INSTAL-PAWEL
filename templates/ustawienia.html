@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}Ustawienia — INSTAL-PAWEŁ{% endblock %}
+{% block content %}
+<div class="page-head"><h1>Ustawienia</h1></div>
+
+<form method="post" action="{{ url_for('ustawienia_zapisz') }}">
+  <section class="card">
+    <h2>Dane wystawcy (Twoja firma)</h2>
+    <div class="row2">
+      <label>Nazwa <input name="nazwa" value="{{ s['nazwa'] or '' }}"></label>
+      <label>Podtytuł <input name="podtytul" value="{{ s['podtytul'] or '' }}"></label>
+    </div>
+    <div class="row2">
+      <label>Wordmark (napis w nagłówku PDF) <input name="wordmark" value="{{ s['wordmark'] or '' }}"></label>
+      <label>Podpis wordmarku <input name="wordmark_sub" value="{{ s['wordmark_sub'] or '' }}"></label>
+    </div>
+    <div class="row2">
+      <label>NIP <input name="nip" value="{{ s['nip'] or '' }}"></label>
+      <label>Adres <input name="adres" value="{{ s['adres'] or '' }}"></label>
+    </div>
+    <div class="row2">
+      <label>Telefon <input name="tel" value="{{ s['tel'] or '' }}"></label>
+      <label>E-mail <input name="email" value="{{ s['email'] or '' }}"></label>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Domyślne teksty</h2>
+    <label>Klauzula VAT <small>(puste = domyślny tekst art. 113 z silnika)</small>
+      <textarea name="klauzula_vat" rows="3">{{ s['klauzula_vat'] or '' }}</textarea>
+    </label>
+    <label class="mt">Domyślne warunki <small>(jeden punkt w wierszu)</small>
+      <textarea name="warunki" rows="4">{{ warunki }}</textarea>
+    </label>
+    <label class="mt">Domyślne materiały pomocnicze <small>(jeden punkt w wierszu)</small>
+      <textarea name="materialy" rows="6">{{ materialy }}</textarea>
+    </label>
+  </section>
+
+  <section class="card">
+    <h2>Zapis PDF</h2>
+    <label>Folder zapisu plików PDF
+      <input name="pdf_folder" value="{{ s['pdf_folder'] or '' }}">
+    </label>
+    <p class="muted">Wygenerowane oferty będą zapisywane w tym folderze i otwierane automatycznie.</p>
+  </section>
+
+  <div class="actions">
+    <button class="btn btn-primary btn-lg" type="submit">Zapisz ustawienia</button>
+  </div>
+</form>
+
+<section class="card">
+  <h2>Kopia zapasowa</h2>
+  <p class="muted">Cała baza (klienci, katalog, wyceny, faktury) to jeden plik <code>dane.db</code>.
+    Kliknij poniżej, aby zapisać kopię z dzisiejszą datą do folderu „Kopie zapasowe” (obok PDF-ów).
+    Rób to np. raz w tygodniu — a raz na jakiś czas przegraj folder na pendrive.</p>
+  <form method="post" action="{{ url_for('ustawienia_backup') }}">
+    <button class="btn btn-primary" type="submit">💾 Zrób kopię zapasową teraz</button>
+  </form>
+</section>
+
+<section class="card">
+  <h2>Aktualizacje programu</h2>
+  <p class="muted">Masz wersję <b class="mono">{{ wersja }}</b>. Jednym kliknięciem sprawdzisz,
+    czy jest nowsza wersja programu (potrzebny internet). Twoje dane — klienci, wyceny, faktury,
+    umowy — są bezpieczne: aktualizacja ich nie dotyka, a przed instalacją program sam robi
+    kopię zapasową bazy.</p>
+  <div class="actions">
+    <button class="btn" type="button" id="btnSprawdz" onclick="sprawdzAktualizacje()">🔍 Sprawdź, czy jest nowa wersja</button>
+    <button class="btn btn-primary hidden" type="button" id="btnInstaluj" onclick="instalujAktualizacje()">⬇️ Zainstaluj aktualizację</button>
+    <span class="muted" id="aktInfo"></span>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function sprawdzAktualizacje() {
+  const info = document.getElementById("aktInfo");
+  const btn = document.getElementById("btnSprawdz");
+  btn.disabled = true; info.textContent = "Sprawdzam…";
+  fetch("/api/aktualizacja/sprawdz")
+    .then(r => r.json())
+    .then(d => {
+      btn.disabled = false;
+      if (!d.ok) { info.textContent = d.blad; return; }
+      if (d.dostepna) {
+        info.textContent = `Jest nowa wersja ${d.zdalna} (masz ${d.lokalna}).`;
+        document.getElementById("btnInstaluj").classList.remove("hidden");
+      } else {
+        info.textContent = `Masz najnowszą wersję (${d.lokalna}). 👍`;
+      }
+    })
+    .catch(() => { btn.disabled = false; info.textContent = "Nie udało się sprawdzić — brak internetu?"; });
+}
+function instalujAktualizacje() {
+  const info = document.getElementById("aktInfo");
+  const btn = document.getElementById("btnInstaluj");
+  btn.disabled = true; document.getElementById("btnSprawdz").disabled = true;
+  info.textContent = "Pobieram i instaluję… (do minuty, nie zamykaj programu)";
+  fetch("/api/aktualizacja/wykonaj", {method: "POST"})
+    .then(r => r.json())
+    .then(d => {
+      if (!d.ok) { btn.disabled = false; info.textContent = d.blad; return; }
+      info.textContent = `Zainstalowano wersję ${d.wersja}. Program uruchamia się ponownie…`;
+      czekajNaRestart();
+    })
+    .catch(() => {
+      // serwer mógł już zdążyć się zrestartować — poczekaj i odśwież
+      czekajNaRestart();
+    });
+}
+function czekajNaRestart(proba = 0) {
+  if (proba > 30) {
+    document.getElementById("aktInfo").textContent =
+      "Jeśli strona sama się nie odświeży — zamknij program i uruchom go ponownie (start).";
+    return;
+  }
+  setTimeout(() => {
+    fetch("/ustawienia", {cache: "no-store"})
+      .then(r => { if (r.ok) location.reload(); else czekajNaRestart(proba + 1); })
+      .catch(() => czekajNaRestart(proba + 1));
+  }, 1500);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,112 @@
+/* INSTAL-PAWEŁ — style aplikacji (spójne z marką PDF) */
+:root{
+  --navy:#0E2233; --orange:#F39200; --orange-d:#C56E00; --blue:#2F7FB8;
+  --cream:#F5F1E6; --light:#E9F0F6; --line:#C8D3DE; --dark:#1F2933; --grey:#5B6B7B;
+  --ok:#2e7d32; --danger:#b3261e; --radius:10px;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  color:var(--dark);background:var(--light);font-size:15px;line-height:1.45}
+
+/* ---- topbar ---- */
+.topbar{display:flex;align-items:center;gap:22px;background:var(--navy);color:var(--cream);
+  padding:12px 22px;box-shadow:0 2px 6px rgba(0,0,0,.15);position:sticky;top:0;z-index:20}
+.brand{display:flex;align-items:center;gap:10px;color:var(--cream);text-decoration:none;font-weight:700}
+.brand .bolt{color:var(--orange);font-size:22px}
+.brand-text{display:flex;flex-direction:column;line-height:1.1;font-size:17px;letter-spacing:.5px}
+.brand-text small{font-size:11px;font-weight:400;color:#9fb3c4;letter-spacing:1px;text-transform:uppercase}
+.mainnav{display:flex;gap:6px;margin-left:6px}
+.mainnav a{color:#cdd9e4;text-decoration:none;padding:8px 14px;border-radius:8px;font-weight:600}
+.mainnav a:hover{background:rgba(255,255,255,.08);color:#fff}
+.btn-new{margin-left:auto}
+
+/* ---- layout ---- */
+.wrap{max-width:1040px;margin:24px auto;padding:0 18px}
+.page-head{display:flex;align-items:center;justify-content:space-between;margin:6px 0 18px}
+h1{font-size:26px;color:var(--navy);margin:0}
+h2{font-size:17px;color:var(--navy);margin:0 0 14px;border-left:4px solid var(--orange);padding-left:10px}
+h2 small{font-weight:400;color:var(--grey);font-size:12px;border:0}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-bottom:18px;
+  box-shadow:0 1px 3px rgba(14,34,51,.05)}
+.subcard{background:#f7fafd;border:1px solid var(--line);border-radius:8px;padding:14px;margin-top:10px}
+.hidden{display:none}
+.mt{margin-top:12px}
+.muted{color:var(--grey);font-size:13px}
+
+/* ---- forms ---- */
+label{display:block;font-weight:600;color:var(--navy);margin-bottom:2px;font-size:13px}
+label small{font-weight:400;color:var(--grey)}
+input,select,textarea{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;
+  font-size:15px;font-family:inherit;background:#fff;margin-top:3px}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(47,127,184,.15)}
+textarea{resize:vertical}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+label.chk{display:flex;align-items:center;gap:8px;font-weight:600;margin-top:22px}
+label.chk.block{margin-top:10px}
+label.chk input{width:auto;margin:0}
+.klient-row{display:flex;gap:10px;align-items:center}
+.klient-row select{flex:1}
+.row-rob{display:flex;gap:14px;align-items:flex-end}
+.row-rob .grow{flex:1}
+
+/* ---- buttons ---- */
+.btn{display:inline-block;background:#fff;color:var(--navy);border:1px solid var(--line);
+  padding:9px 16px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;text-decoration:none;
+  transition:.12s}
+.btn:hover{background:#f0f5fa;border-color:var(--blue)}
+.btn-primary{background:var(--orange);border-color:var(--orange-d);color:#3a2600}
+.btn-primary:hover{background:#ffa71f;border-color:var(--orange-d)}
+.btn-danger{color:var(--danger);border-color:#e6b8b5}
+.btn-danger:hover{background:#fbeceb;border-color:var(--danger)}
+.btn-sm{padding:5px 11px;font-size:13px}
+.btn-lg{padding:12px 22px;font-size:16px}
+.inline{display:inline}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+/* ---- tables ---- */
+table.grid{width:100%;border-collapse:collapse;background:#fff}
+.grid th{background:var(--navy);color:#fff;text-align:left;padding:10px 12px;font-size:13px}
+.grid td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+.grid tr:nth-child(even) td{background:#f4f7fa}
+.grid .r,th.r{text-align:right}
+.grid .c,th.c{text-align:center}
+.nowrap{white-space:nowrap}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+td.actions{white-space:nowrap;text-align:right}
+th.actions{text-align:right}
+
+.pozycje td{padding:5px 6px}
+.pozycje input,.pozycje select{margin-top:0}
+
+/* ---- summary bar ---- */
+.summary-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;
+  position:sticky;bottom:0;border:2px solid var(--orange)}
+.sums{display:flex;gap:26px;font-size:15px}
+.sums .total{font-size:19px;color:var(--navy)}
+.sums b{color:var(--navy)}
+.sums .total b{color:var(--orange-d)}
+
+/* ---- statusy ---- */
+select.status{width:auto;margin:0;padding:4px 8px;font-size:12.5px;font-weight:600;border-radius:14px;
+  border:1px solid var(--line);background:#fff;cursor:pointer}
+select.status-szkic{color:var(--grey)}
+select.status-wysłana{color:var(--blue);border-color:#bcd7ec;background:#eef6fc}
+select.status-zaakceptowana{color:var(--ok);border-color:#b6ddc0;background:#e6f4ea}
+select.status-odrzucona{color:var(--danger);border-color:#e6b8b5;background:#fbeceb}
+.badge{display:inline-block;border-radius:14px;padding:4px 12px;font-size:12.5px;font-weight:700;
+  border:1px solid transparent;cursor:pointer;font-family:inherit}
+.badge-ok{background:#e6f4ea;color:var(--ok);border-color:#b6ddc0}
+.badge-ok:hover{background:#d5ecdc}
+.badge-wait{background:#fff4e0;color:#a36a00;border-color:#f0d9ac}
+.badge-wait:hover{background:#ffeccc}
+.badge-late{background:var(--danger);color:#fff;border-color:var(--danger)}
+.badge-late:hover{background:#9a1f18}
+.cennik-rob{background:#f7fafd;border:1px dashed var(--line);border-radius:8px;padding:10px 12px;margin-bottom:12px}
+
+/* ---- misc ---- */
+.flash{padding:11px 16px;border-radius:8px;margin-bottom:16px;font-weight:600}
+.flash-ok{background:#e6f4ea;color:var(--ok);border:1px solid #b6ddc0}
+.empty{text-align:center;padding:60px 20px;color:var(--grey)}
+.empty p{font-size:17px;margin-bottom:18px}
+code{background:#eef2f6;padding:1px 5px;border-radius:4px;font-size:12px}

@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Katalog — INSTAL-PAWEŁ{% endblock %}
+{% block content %}
+<div class="page-head"><h1>Katalog produktów</h1></div>
+
+<section class="card">
+  <h2 id="form-tytul">Dodaj produkt</h2>
+  <form method="post" action="{{ url_for('katalog_zapisz') }}" id="prod-form">
+    <input type="hidden" name="id" id="p-id">
+    <div class="row2">
+      <label>Nazwa <input name="nazwa" id="p-nazwa" required></label>
+      <label>Kategoria <input name="kategoria" id="p-kategoria" placeholder="np. Moduły, Inwertery"></label>
+    </div>
+    <div class="row3">
+      <label>Jednostka (j.m.) <input name="jm" id="p-jm" placeholder="szt."></label>
+      <label>Cena brutto (zł) <input name="cena_brutto" id="p-cena" type="number" step="0.01" min="0" value="0"></label>
+      <label class="chk"><input type="checkbox" name="vat" id="p-vat" checked> cena zawiera VAT (brutto)</label>
+    </div>
+    <label>Specyfikacja techniczna <small>(opcjonalnie, format „Klucz: Wartość” — jeden w wierszu)</small>
+      <textarea name="spec_text" id="p-spec" rows="5" placeholder="Producent: JINKO Solar&#10;Moc: 510 Wp"></textarea>
+    </label>
+    <div class="actions mt">
+      <button class="btn btn-primary" type="submit">Zapisz produkt</button>
+      <button class="btn" type="button" onclick="resetForm()">Wyczyść</button>
+    </div>
+  </form>
+</section>
+
+<section class="card">
+  <h2>Produkty ({{ products|length }})</h2>
+  <table class="grid">
+    <thead><tr><th>Nazwa</th><th>Kategoria</th><th>j.m.</th><th class="r">Cena brutto</th><th class="c">Spec.</th><th class="actions">Działania</th></tr></thead>
+    <tbody>
+      {% for p in products %}
+      <tr>
+        <td>{{ p['nazwa'] }}</td>
+        <td>{{ p['kategoria'] or '—' }}</td>
+        <td>{{ p['jm'] or '—' }}</td>
+        <td class="r nowrap">{{ p['cena_brutto']|money }}</td>
+        <td class="c">{{ '✓' if p['spec_json'] else '—' }}</td>
+        <td class="actions">
+          <button class="btn btn-sm" type="button"
+            onclick='edytuj({{ {"id":p["id"],"nazwa":p["nazwa"],"kategoria":p["kategoria"],"jm":p["jm"],"cena_brutto":p["cena_brutto"],"vat":p["vat"],"spec_json":p["spec_json"]}|tojson }})'>Edytuj</button>
+          <form method="post" action="{{ url_for('katalog_usun', pid=p['id']) }}" class="inline"
+                onsubmit="return confirm('Usunąć produkt?');">
+            <button class="btn btn-sm btn-danger" type="submit">Usuń</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function edytuj(p) {
+  document.getElementById("form-tytul").textContent = "Edytuj produkt";
+  document.getElementById("p-id").value = p.id;
+  document.getElementById("p-nazwa").value = p.nazwa || "";
+  document.getElementById("p-kategoria").value = p.kategoria || "";
+  document.getElementById("p-jm").value = p.jm || "";
+  document.getElementById("p-cena").value = p.cena_brutto || 0;
+  document.getElementById("p-vat").checked = !!p.vat;
+  let spec = "";
+  if (p.spec_json) { try { spec = JSON.parse(p.spec_json).map(kv => kv[0] + ": " + kv[1]).join("\n"); } catch(e){} }
+  document.getElementById("p-spec").value = spec;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+function resetForm() {
+  document.getElementById("prod-form").reset();
+  document.getElementById("p-id").value = "";
+  document.getElementById("form-tytul").textContent = "Dodaj produkt";
+}
+</script>
+{% endblock %}

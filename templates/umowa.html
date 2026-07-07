@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}{{ "Edycja umowy" if u else "Nowa umowa" }} — INSTAL-PAWEŁ{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>{{ "Edycja umowy" if u else "Nowa umowa" }}</h1>
+  <a class="btn" href="{{ url_for('umowy') }}">← Lista umów</a>
+</div>
+
+<form method="post" action="{{ url_for('umowa_zapisz') }}" id="umowaForm">
+  {% if u %}<input type="hidden" name="id" value="{{ u['id'] }}">{% endif %}
+  <input type="hidden" name="po_zapisie" id="po_zapisie" value="">
+
+  <section class="card">
+    <h2>Podstawowe dane</h2>
+    <div class="row3">
+      <label>Numer umowy <input name="numer" value="{{ form.get('numer') or domyslny_numer }}"></label>
+      <label>Data zawarcia <input name="data" value="{{ form.get('data') or dzis }}" placeholder="dd.mm.rrrr"></label>
+      <label>Miejscowość <small>(np. „Wrześni” — jak w zdaniu „zawarta we…”)</small>
+        <input name="miejscowosc" value="{{ form.get('miejscowosc') or '' }}" placeholder="np. Wrześni"></label>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Zamawiający (klient)</h2>
+    <label>Wybierz klienta z bazy
+      <select name="client_id" onchange="toggleReczny(this.value)">
+        <option value="">— wpiszę dane ręcznie poniżej —</option>
+        {% for c in clients %}
+        <option value="{{ c['id'] }}" {{ 'selected' if form.get('client_id')|string == c['id']|string }}>{{ c['nazwa'] }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <div id="klientReczny" class="subcard {{ 'hidden' if form.get('client_id') }}">
+      <div class="row2">
+        <label>Imię i nazwisko / nazwa firmy <input name="client_nazwa" value="{{ form.get('client_nazwa') or '' }}"></label>
+        <label>Adres <input name="client_adres" value="{{ form.get('client_adres') or '' }}" placeholder="ul. ..., 00-000 Miasto"></label>
+      </div>
+      <label class="mt">Kontakt <small>(telefon / e-mail, opcjonalnie)</small>
+        <input name="client_kontakt" value="{{ form.get('client_kontakt') or '' }}"></label>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Przedmiot umowy</h2>
+    <label>Co ma zostać wykonane <small>(dokończenie zdania „…przyjmuje do wykonania: …”)</small>
+      <textarea name="przedmiot" rows="2" placeholder="np. wykonanie instalacji elektrycznej w budynku mieszkalnym przy ul. ...">{{ form.get('przedmiot') or '' }}</textarea>
+    </label>
+    <label class="mt">Zakres prac <small>(jeden punkt w wierszu, opcjonalnie)</small>
+      <textarea name="zakres" rows="5" placeholder="ułożenie okablowania i osprzętu&#10;montaż rozdzielnicy z zabezpieczeniami&#10;pomiary elektryczne i protokół">{{ form.get('zakres') or '' }}</textarea>
+    </label>
+  </section>
+
+  <section class="card">
+    <h2>Termin i wynagrodzenie</h2>
+    <div class="row2">
+      <label>Rozpoczęcie prac <input name="termin_od" value="{{ form.get('termin_od') or '' }}" placeholder="np. 15.07.2026 albo „do uzgodnienia”"></label>
+      <label>Zakończenie prac <input name="termin_do" value="{{ form.get('termin_do') or '' }}" placeholder="np. 31.07.2026"></label>
+    </div>
+    <div class="row3">
+      <label class="mt">Wynagrodzenie łącznie (zł) <input name="kwota" value="{{ form.get('kwota') or '' }}" placeholder="np. 18 500" oninput="slownie()"></label>
+      <label class="mt">Zaliczka (zł) <small>(puste = brak zaliczki)</small> <input name="zaliczka" value="{{ form.get('zaliczka') or '' }}"></label>
+      <label class="mt">Gwarancja <input name="gwarancja" value="{{ form.get('gwarancja') or '24 miesiące' }}"></label>
+    </div>
+    <p class="muted" id="slownieBox"></p>
+    <label class="mt">Płatność <small>(puste = domyślny tekst)</small>
+      <input name="platnosc" value="{{ form.get('platnosc') or '' }}" placeholder="{{ domyslna_platnosc }}"></label>
+  </section>
+
+  <section class="card">
+    <h2>Postanowienia dodatkowe <small>(opcjonalne, jeden punkt w wierszu)</small></h2>
+    <textarea name="dodatkowe" rows="3" placeholder="np. Materiały dostarcza Wykonawca w ramach wynagrodzenia.">{{ form.get('dodatkowe') or '' }}</textarea>
+    <p class="muted">Stałe zapisy umowy (obowiązki stron, gwarancja, klauzula VAT art. 113, postanowienia
+      końcowe) dodają się automatycznie — zobacz je w wygenerowanym PDF.</p>
+  </section>
+
+  <div class="actions card summary-bar">
+    <div class="sums"><span class="total">Wynagrodzenie: <b id="sumaLive">0,00 zł</b></span></div>
+    <div class="actions">
+      <button class="btn btn-lg" type="submit">💾 Zapisz umowę</button>
+      <button class="btn btn-primary btn-lg" type="button" onclick="zapiszIPdf()">📄 Zapisz i generuj PDF</button>
+    </div>
+  </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleReczny(v) {
+  document.getElementById("klientReczny").classList.toggle("hidden", !!v);
+}
+function parseNum(v) {
+  return parseFloat(String(v || "").replace(/\s/g, "").replace(",", ".")) || 0;
+}
+function money(v) {
+  const [c, g] = v.toFixed(2).split(".");
+  return c.replace(/\B(?=(\d{3})+(?!\d))/g, " ") + "," + g + " zł";
+}
+function slownie() {
+  const k = parseNum(document.querySelector("[name=kwota]").value);
+  document.getElementById("sumaLive").textContent = money(k);
+}
+function zapiszIPdf() {
+  document.getElementById("po_zapisie").value = "pdf";
+  document.getElementById("umowaForm").submit();
+}
+slownie();
+// po "Zapisz i generuj PDF" wracamy tu z ?pdf=1 -> od razu generujemy
+if (new URLSearchParams(location.search).get("pdf") === "1") {
+  history.replaceState(null, "", location.pathname);
+  fetch(`/api/umowa/{{ u['id'] if u else 0 }}/pdf`, {method: "POST"})
+    .then(r => r.json())
+    .then(d => { if (!d.ok) alert(d.blad || "Nie udało się wygenerować PDF."); })
+    .catch(e => alert("Błąd: " + e));
+}
+</script>
+{% endblock %}

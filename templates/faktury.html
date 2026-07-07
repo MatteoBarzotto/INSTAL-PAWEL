@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Faktury — INSTAL-PAWEŁ{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Faktury</h1>
+  <a class="btn btn-primary" href="{{ url_for('faktura_nowa') }}">+ Nowa faktura</a>
+</div>
+
+{% if invoices %}
+<table class="grid">
+  <thead>
+    <tr><th>Numer</th><th>Data wystawienia</th><th>Nabywca</th><th class="r">Do zapłaty</th><th class="c">Status</th><th class="actions">Działania</th></tr>
+  </thead>
+  <tbody>
+    {% for f in invoices %}
+    {% set po_terminie = f['status'] != 'zapłacona' and f['term_date'] and f['term_date'] < dzis_iso %}
+    <tr>
+      <td class="mono">{{ f["numer"] }}</td>
+      <td>{{ f["wyst_date"] }}</td>
+      <td>{{ f["nabywca"] or "—" }}</td>
+      <td class="r nowrap">{{ f["suma"]|money }}</td>
+      <td class="c nowrap">
+        <form method="post" action="{{ url_for('faktura_status', fid=f['id']) }}" class="inline">
+          {% if f['status'] == 'zapłacona' %}
+          <input type="hidden" name="status" value="niezapłacona">
+          <button class="badge badge-ok" type="submit" title="Kliknij, aby oznaczyć jako niezapłaconą">✓ zapłacona</button>
+          {% else %}
+          <input type="hidden" name="status" value="zapłacona">
+          <button class="badge {{ 'badge-late' if po_terminie else 'badge-wait' }}" type="submit"
+                  title="Kliknij, aby oznaczyć jako zapłaconą">
+            {{ 'po terminie!' if po_terminie else 'niezapłacona' }}
+          </button>
+          {% endif %}
+        </form>
+      </td>
+      <td class="actions">
+        <a class="btn btn-primary btn-sm" href="{{ url_for('faktura_edytuj', fid=f['id']) }}">Otwórz / PDF</a>
+        <form method="post" action="{{ url_for('faktura_duplikuj', fid=f['id']) }}" class="inline">
+          <button class="btn btn-sm" type="submit">Duplikuj</button>
+        </form>
+        <form method="post" action="{{ url_for('faktura_usun', fid=f['id']) }}" class="inline"
+              onsubmit="return confirm('Usunąć tę fakturę?');">
+          <button class="btn btn-sm btn-danger" type="submit">Usuń</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="empty">
+  <p>Nie masz jeszcze żadnych faktur.</p>
+  <a class="btn btn-primary btn-lg" href="{{ url_for('faktura_nowa') }}">Wystaw pierwszą fakturę</a>
+</div>
+{% endif %}
+{% endblock %}

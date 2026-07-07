@@ -1,0 +1,19 @@
+# środowisko i cache
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+
+# dane użytkownika — NIGDY nie wersjonujemy (baza Pawła zostaje u niego)
+dane.db
+
+# artefakty lokalne
+INSTAL-PAWEL-dla-Pawla.zip
+pdf_engine/przyklad_oferta.pdf
+pdf_engine/przyklad_umowa.pdf
+FAKTURA/*.zip
+
+# pliki lokalne edytora
+.obsidian/
+.claude/
+**/.claude/

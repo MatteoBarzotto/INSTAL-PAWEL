@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Faktura {{ domyslny_numer }} — INSTAL-PAWEŁ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='faktura.css') }}">
+</head>
+<body>
+
+<!-- ===== PASEK NARZĘDZI ===== -->
+<div id="toolbar" class="no-print">
+  <div class="brand"><span>⚡</span> INSTAL-PAWEL</div>
+  <a class="tbbtn" href="{{ url_for('faktury') }}">← Lista faktur</a>
+  <button class="primary" onclick="drukujPDF()">🖨️ Zapisz i drukuj / PDF</button>
+  <div class="sep"></div>
+  <a class="tbbtn" href="{{ url_for('faktura_nowa') }}">📄 Nowa</a>
+  <button onclick="zapiszFakture()">💾 Zapisz</button>
+  <div class="sep"></div>
+  <select id="clientPicker" onchange="wybierzNabywce(this.value)">
+    <option value="">👤 Wstaw nabywcę z bazy…</option>
+    {% for c in clients %}
+    <option value="{{ c['id'] }}">{{ c['nazwa'] }}</option>
+    {% endfor %}
+  </select>
+  <div class="sep"></div>
+  <button onclick="eksportJSON()">⬇️ Eksport</button>
+  <label class="btn">⬆️ Import<input type="file" accept="application/json" style="display:none" onchange="importJSON(event)"></label>
+  <div class="sep"></div>
+  <div class="toggles">
+    <label><input type="checkbox" id="t_blueprint" checked onchange="render()"> Kratka</label>
+    <label><input type="checkbox" id="t_regon" checked onchange="render()"> REGON</label>
+    <label><input type="checkbox" id="t_bank" checked onchange="render()"> Konto bank.</label>
+    <label><input type="checkbox" id="t_klauzula" checked onchange="render()"> Klauzula VAT</label>
+  </div>
+</div>
+<div id="hint" class="no-print">Klikaj w pola, aby edytować. Sumy i kwota słownie liczą się automatycznie. „Zapisz i drukuj / PDF" → w oknie druku wybierz „Zapisz jako PDF".</div>
+
+<!-- ===== ARKUSZ ===== -->
+<div id="sheet">
+  <div class="accent"></div>
+
+  <header class="head">
+    <div class="blueprint" id="blueprint"></div>
+    <div class="logobadge"><img src="{{ url_for('static', filename='img/logo-instal-pawel.png') }}" alt="INSTAL-PAWEL"></div>
+    <div class="titlebox">
+      <div class="t1">FAKTURA</div>
+      <div class="t2">ZW. Z VAT · ART. 113</div>
+      <div class="meta">
+        <div class="lab">Numer faktury</div>
+        <div class="val"><input class="fh" id="m_numer" placeholder="FV / 01 / 07 / 2026"></div>
+        <div class="lab">Data wystawienia</div>
+        <div class="val"><input class="fh" id="m_wyst" type="date"></div>
+        <div class="lab">Data sprzedaży</div>
+        <div class="val"><input class="fh" id="m_sprz" type="date"></div>
+        <div class="lab">Termin płatności</div>
+        <div class="val"><input class="fh pay" id="m_term" type="date"></div>
+      </div>
+    </div>
+  </header>
+
+  <div class="body">
+    <!-- STRONY -->
+    <div class="parties">
+      <div class="pcard">
+        <div class="phead" style="background:#16263D;"><span class="dia" style="background:#F39019;"></span> Sprzedawca</div>
+        <div class="pbody">
+          <div class="pname"><input class="f" id="s_nazwa" style="width:100%" placeholder="Nazwa sprzedawcy"></div>
+          <div class="prow"><span class="k">Adres:</span> <input class="f" id="s_adres" style="flex:1" placeholder="ul. ..., 00-000 Miasto"></div>
+          <div class="prow"><span class="k">NIP:</span> <input class="f" id="s_nip" style="flex:1" placeholder="000-000-00-00"></div>
+          <div class="prow" id="s_regon_row"><span class="k">REGON:</span> <input class="f" id="s_regon" style="flex:1" placeholder="000000000"></div>
+        </div>
+      </div>
+      <div class="pcard">
+        <div class="phead" style="background:#2E7BC4;"><span class="dia" style="background:#fff;"></span> Nabywca</div>
+        <div class="pbody">
+          <div class="pname"><input class="f fb" id="n_nazwa" style="width:100%" placeholder="Nazwa nabywcy / Imię i nazwisko"></div>
+          <div class="prow"><span class="k">Adres:</span> <input class="f fb" id="n_adres" style="flex:1" placeholder="ul. ..., 00-000 Miasto"></div>
+          <div class="prow"><span class="k">NIP:</span> <input class="f fb" id="n_nip" style="flex:1" placeholder="000-000-00-00"></div>
+          <div class="prow" id="n_regon_row"><span class="k">REGON:</span> <input class="f fb" id="n_regon" style="flex:1" placeholder="000000000"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- POZYCJE -->
+    <table class="items">
+      <thead>
+        <tr>
+          <th style="width:34px;">Lp.</th>
+          <th style="text-align:left;">Nazwa usługi / towaru</th>
+          <th style="width:52px;">Ilość</th>
+          <th style="width:52px;">J.m.</th>
+          <th style="width:110px;text-align:right;">Cena</th>
+          <th style="width:120px;text-align:right;">Wartość</th>
+          <th class="colactions no-print"></th>
+        </tr>
+      </thead>
+      <tbody id="itemsBody"></tbody>
+    </table>
+    <div class="additem no-print"><button onclick="dodajPozycje()">＋ Dodaj pozycję</button></div>
+
+    <!-- PŁATNOŚĆ + SUMA -->
+    <div class="lower">
+      <div class="pay">
+        <div class="ph">Płatność</div>
+        <div class="prow"><span class="k">Sposób płatności:</span> <input class="f" id="p_sposob" style="flex:1" placeholder="Przelew / Gotówka"></div>
+        <div id="p_bank_row"><div class="prow"><span class="k">Bank:</span> <input class="f" id="p_bank" style="flex:1" placeholder="Nazwa banku"></div>
+        <div class="prow"><span class="k">Nr konta:</span> <input class="f" id="p_konto" style="flex:1;font-variant-numeric:tabular-nums;" placeholder="00 0000 0000 0000 0000 0000 0000"></div></div>
+      </div>
+
+      <div class="vatwrap">
+        <div class="topay">
+          <span class="l">Do zapłaty</span>
+          <span class="v" id="doZaplaty">0,00 PLN</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SŁOWNIE -->
+    <div class="slownie"><span class="k">Słownie:</span><span class="v" id="slownie">zero złotych 00/100</span></div>
+
+    <!-- KLAUZULA -->
+    <div class="klauzula" id="klauzulaBox">
+      <span class="ico">⚡</span>
+      <span class="ktit" style="white-space:nowrap;flex-shrink:0;padding-top:1px;">Uwagi / Klauzula:</span>
+      <textarea class="f ktxt" id="klauzula" style="flex:1;border:none;resize:vertical;line-height:1.5;font-size:11.5px;background:transparent;overflow:hidden;" rows="2" oninput="autoGrow(this)"></textarea>
+    </div>
+
+    <!-- PODPISY -->
+    <div class="signs">
+      <div class="s"><div class="ln">Podpis osoby upoważnionej do wystawienia</div></div>
+      <div class="s"><div class="ln">Podpis osoby upoważnionej do odbioru</div></div>
+    </div>
+
+    <!-- STOPKA -->
+    <div class="foot">
+      <div class="footbar">
+        <div class="fb"><span class="z">⚡</span> INSTAL-PAWEL <span class="sub">USŁUGI ELEKTRYCZNE</span></div>
+        <div class="fc">
+          <span><span class="k">tel.</span> <input class="fh" id="f_tel" style="min-width:110px;color:#D6E0EC;" placeholder="500 100 200"></span>
+          <span><span class="k">e-mail</span> <input class="fh" id="f_mail" style="min-width:190px;color:#D6E0EC;" placeholder="email@example.com"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const FAKTURA_ID = {{ f['id'] if f else 'null' }};
+  const STAN = {{ (stan or None)|tojson }};
+  const DEFAULTS = {{ defaults|tojson }};
+  const DOMYSLNY_NUMER = {{ domyslny_numer|tojson }};
+  const DZIS_ISO = {{ dzis_iso|tojson }};
+  const CLIENTS = {{ clients_json|tojson }};
+</script>
+<script src="{{ url_for('static', filename='lib/kwoty.js') }}"></script>
+<script src="{{ url_for('static', filename='faktura.js') }}"></script>
+</body>
+</html>

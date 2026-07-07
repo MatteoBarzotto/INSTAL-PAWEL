@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Zestawy — INSTAL-PAWEŁ{% endblock %}
+{% block content %}
+<div class="page-head"><h1>Zestawy (BOM konstrukcji)</h1></div>
+
+<section class="card">
+  <h2 id="form-tytul">Dodaj zestaw</h2>
+  <form method="post" action="{{ url_for('bom_zapisz') }}" id="bom-form">
+    <input type="hidden" name="id" id="b-id">
+    <div class="row2">
+      <label>Nazwa robocza <input name="nazwa" id="b-nazwa" required placeholder="np. Konstrukcja BAKS"></label>
+      <label>Tytuł sekcji w PDF <input name="tytul" id="b-tytul" placeholder="np. Konstrukcja wsporcza – system BAKS"></label>
+    </div>
+    <label class="mt">Opis <small>(punkty, jeden w wierszu; dozwolone &lt;b&gt;…&lt;/b&gt;)</small>
+      <textarea name="opis_text" id="b-opis" rows="4"></textarea>
+    </label>
+    <label>Nagłówek wykazu <input name="naglowek_wykazu" id="b-naglowek" placeholder="Wykaz elementów konstrukcji"></label>
+    <label class="mt">Elementy <small>(jeden w wierszu w formacie: <code>symbol | nazwa | ilość | j.m.</code>)</small>
+      <textarea name="elementy_text" id="b-elementy" rows="8"
+        placeholder="K-07-S-RN | Trójkąt montażowy średni | 12 | szt.&#10;894633 | Profil aluminiowy PAL40 | 8 | szt."></textarea>
+    </label>
+    <label>Nota <input name="nota" id="b-nota"></label>
+    <div class="actions mt">
+      <button class="btn btn-primary" type="submit">Zapisz zestaw</button>
+      <button class="btn" type="button" onclick="resetForm()">Wyczyść</button>
+    </div>
+  </form>
+</section>
+
+<section class="card">
+  <h2>Zestawy ({{ boms|length }})</h2>
+  <table class="grid">
+    <thead><tr><th>Nazwa</th><th>Tytuł w PDF</th><th class="c">Elementów</th><th class="actions">Działania</th></tr></thead>
+    <tbody>
+      {% for b in boms %}
+      <tr>
+        <td>{{ b['nazwa'] }}</td>
+        <td>{{ b['tytul'] or '—' }}</td>
+        <td class="c">{{ (b['elementy_json'] or '[]')|from_json|length }}</td>
+        <td class="actions">
+          <button class="btn btn-sm" type="button"
+            onclick='edytuj({{ {"id":b["id"],"nazwa":b["nazwa"],"tytul":b["tytul"],"opis_json":b["opis_json"],"naglowek_wykazu":b["naglowek_wykazu"],"elementy_json":b["elementy_json"],"nota":b["nota"]}|tojson }})'>Edytuj</button>
+          <form method="post" action="{{ url_for('bom_usun', bid=b['id']) }}" class="inline"
+                onsubmit="return confirm('Usunąć zestaw?');">
+            <button class="btn btn-sm btn-danger" type="submit">Usuń</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function edytuj(b) {
+  document.getElementById("form-tytul").textContent = "Edytuj zestaw";
+  document.getElementById("b-id").value = b.id;
+  document.getElementById("b-nazwa").value = b.nazwa || "";
+  document.getElementById("b-tytul").value = b.tytul || "";
+  document.getElementById("b-naglowek").value = b.naglowek_wykazu || "";
+  document.getElementById("b-nota").value = b.nota || "";
+  let opis = "";
+  if (b.opis_json) { try { opis = JSON.parse(b.opis_json).join("\n"); } catch(e){} }
+  document.getElementById("b-opis").value = opis;
+  let el = "";
+  if (b.elementy_json) { try { el = JSON.parse(b.elementy_json).map(r => r.join(" | ")).join("\n"); } catch(e){} }
+  document.getElementById("b-elementy").value = el;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+function resetForm() {
+  document.getElementById("bom-form").reset();
+  document.getElementById("b-id").value = "";
+  document.getElementById("form-tytul").textContent = "Dodaj zestaw";
+}
+</script>
+{% endblock %}

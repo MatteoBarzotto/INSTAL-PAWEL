@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Wyceny INSTAL-PAWEŁ{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="{{ url_for('index') }}">
+      <span class="bolt">⚡</span>
+      <span class="brand-text">INSTAL-PAWEŁ<small>Wyceny i oferty</small></span>
+    </a>
+    <nav class="mainnav">
+      <a href="{{ url_for('index') }}">Wyceny</a>
+      <a href="{{ url_for('faktury') }}">Faktury</a>
+      <a href="{{ url_for('umowy') }}">Umowy</a>
+      <a href="{{ url_for('katalog') }}">Katalog</a>
+      <a href="{{ url_for('klienci') }}">Klienci</a>
+      <a href="{{ url_for('bom') }}">Zestawy</a>
+      <a href="{{ url_for('ustawienia') }}">Ustawienia</a>
+    </nav>
+    <a class="btn btn-primary btn-new" href="{{ url_for('wycena_nowa') }}">+ Nowa wycena</a>
+  </header>
+
+  <main class="wrap">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for cat, msg in messages %}
+          <div class="flash flash-{{ cat }}">{{ msg }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

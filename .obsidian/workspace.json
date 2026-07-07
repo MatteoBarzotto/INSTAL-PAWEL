@@ -1,0 +1,298 @@
+{
+  "main": {
+    "id": "7d579e4d802af092",
+    "type": "split",
+    "children": [
+      {
+        "id": "fe6bc4d0df0f25a4",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "e2a09faec8886617",
+            "type": "leaf",
+            "pinned": true,
+            "state": {
+              "type": "terminal:terminal",
+              "state": {
+                "terminal:terminal": {
+                  "cwd": "/Users/matteobarzotto/Documents/INSTAL-PAWEL",
+                  "focus": false,
+                  "profile": {
+                    "args": [
+                      "--login"
+                    ],
+                    "environment": [],
+                    "executable": "/bin/zsh",
+                    "followTheme": true,
+                    "name": "",
+                    "platforms": {
+                      "darwin": true
+                    },
+                    "pythonExecutable": "python3",
+                    "restoreHistory": false,
+                    "rightClickAction": "copyPaste",
+                    "successExitCodes": [
+                      "0",
+                      "SIGINT",
+                      "SIGTERM"
+                    ],
+                    "terminalOptions": {
+                      "documentOverride": null
+                    },
+                    "type": "integrated",
+                    "useWin32Conhost": true
+                  },
+                  "profileSourceId": "darwinIntegratedDefault",
+                  "serial": null,
+                  "userTitle": ""
+                }
+              },
+              "pinned": true,
+              "icon": "terminal",
+              "title": "Terminal: ✳ Przejrzyj pliki"
+            }
+          },
+          {
+            "id": "bedb4a33c4b9d27b",
+            "type": "leaf",
+            "pinned": true,
+            "state": {
+              "type": "terminal:terminal",
+              "state": {
+                "terminal:terminal": {
+                  "cwd": "/Users/matteobarzotto/Documents/INSTAL-PAWEL",
+                  "focus": false,
+                  "profile": {
+                    "args": [
+                      "--login"
+                    ],
+                    "environment": [],
+                    "executable": "/bin/zsh",
+                    "followTheme": true,
+                    "name": "",
+                    "platforms": {
+                      "darwin": true
+                    },
+                    "pythonExecutable": "python3",
+                    "restoreHistory": false,
+                    "rightClickAction": "copyPaste",
+                    "successExitCodes": [
+                      "0",
+                      "SIGINT",
+                      "SIGTERM"
+                    ],
+                    "terminalOptions": {
+                      "documentOverride": null
+                    },
+                    "type": "integrated",
+                    "useWin32Conhost": true
+                  },
+                  "profileSourceId": "darwinIntegratedDefault",
+                  "serial": null,
+                  "userTitle": ""
+                }
+              },
+              "pinned": true,
+              "icon": "terminal",
+              "title": "Terminal: ⠂ Dodać moduł umów do systemu wycen"
+            }
+          }
+        ],
+        "currentTab": 1
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "606ca23791be5720",
+    "type": "split",
+    "children": [
+      {
+        "id": "7e0a3cd06c7ce93e",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "649e7da3648f798e",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Przeglądarka plików"
+            }
+          },
+          {
+            "id": "ce84b5455aa86432",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Wyszukiwarka"
+            }
+          },
+          {
+            "id": "07fbd7aa346ffc43",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Ulubione"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "8cfa76df4a436a7d",
+    "type": "split",
+    "children": [
+      {
+        "id": "ae01f91c66f97aed",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "d4f3e36c05264bcb",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Linki zwrotne"
+            }
+          },
+          {
+            "id": "c3eef8e185cd753a",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Łącza wychodzące"
+            }
+          },
+          {
+            "id": "f73aaf6bf5dc77e9",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tagi"
+            }
+          },
+          {
+            "id": "06754b6b60e3f89a",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "Wszystkie atrybuty"
+            }
+          },
+          {
+            "id": "f225a8b277dfcb79",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Konspekt"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Otwórz okno szybkiego wyboru": false,
+      "graph:Otwórz podgląd grafu": false,
+      "canvas:Stwórz nową tablicę": false,
+      "daily-notes:Otwórz dzisiejszy dziennik": false,
+      "templates:Wstaw szablon": false,
+      "command-palette:Otwórz listę poleceń": false,
+      "bases:Stwórz nową bazę danych": false,
+      "terminal:Open terminal": false
+    }
+  },
+  "active": "bedb4a33c4b9d27b",
+  "lastOpenFiles": [
+    ".git/index",
+    ".git/objects/90",
+    ".git/objects/90/84fa2f716a7117829f3f32a5f4cef400e02903",
+    ".git/objects/85",
+    ".git/objects/85/bf345af970e8ed0f42b21e60f42a04163fb2e2",
+    ".git/objects/4c",
+    ".git/objects/4c/33fd72262e7f68cb93768a4689bebe9dfc3cb4",
+    ".git/objects/3c",
+    ".git/objects/3c/0e10be3fc4eb5e39835c68b5a655d78ebe3924",
+    ".git/objects/cf",
+    ".git/objects/cf/1ba2dd451b46d86fc38b1c51b8e137abeec6eb",
+    "static/img/logo-instal-pawel.png",
+    "FAKTURA/szablon-faktury-elektrycznej 2/project/uploads/pasted-1782328550952-0.png",
+    "FAKTURA/szablon-faktury-elektrycznej 2/project/assets/logo-instal-pawel.png",
+    "FAKTURA/szablon-faktury-elektrycznej 2/README.md",
+    "FAKTURA/szablon-faktury-elektrycznej/project/uploads/pasted-1782328550952-0.png",
+    "FAKTURA/szablon-faktury-elektrycznej/project/assets/logo-instal-pawel.png",
+    "FAKTURA/szablon-faktury-elektrycznej/README.md",
+    "FAKTURA/HANDOFF-Faktura-INSTAL-PAWEL.md",
+    "INSTRUKCJA.md",
+    ".venv/lib/python3.13/site-packages/flask/sansio/README.md",
+    ".venv/lib/python3.13/site-packages/werkzeug/debug/shared/less.png",
+    ".venv/lib/python3.13/site-packages/werkzeug/debug/shared/more.png",
+    ".venv/lib/python3.13/site-packages/werkzeug/debug/shared/ICON_LICENSE.md",
+    ".venv/lib/python3.13/site-packages/werkzeug/debug/shared/console.png",
+    ".venv/lib/python3.13/site-packages/pip-26.1.2.dist-info/licenses/src/pip/_vendor/idna/LICENSE.md",
+    ".venv/lib/python3.13/site-packages/~ip/_vendor/idna/LICENSE.md",
+    ".venv/lib/python3.13/site-packages/~ip-25.3.dist-info/licenses/src/pip/_vendor/idna/LICENSE.md",
+    ".venv/lib/python3.13/site-packages/pip-25.3.dist-info/licenses/src/pip/_vendor/idna/LICENSE.md",
+    ".venv/lib/python3.13/site-packages/pip/_vendor/idna/LICENSE.md",
+    "KONCEPCJA.md",
+    "CLAUDE.md",
+    "CLAUDE.md.md",
+    "Witaj.md"
+  ]
+}

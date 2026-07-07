@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Klienci — INSTAL-PAWEŁ{% endblock %}
+{% block content %}
+<div class="page-head"><h1>Klienci</h1></div>
+
+<section class="card">
+  <h2 id="form-tytul">Dodaj klienta</h2>
+  <form method="post" action="{{ url_for('klienci_zapisz') }}" id="kli-form">
+    <input type="hidden" name="id" id="k-id">
+    <label>Nazwa <input name="nazwa" id="k-nazwa" required></label>
+    <div class="row2 mt">
+      <label>Adres <small>(nowe linie zostaną zachowane)</small>
+        <textarea name="adres_html" id="k-adres" rows="3"></textarea>
+      </label>
+      <label>Osoba kontaktowa
+        <textarea name="kontakt_html" id="k-kontakt" rows="3"></textarea>
+      </label>
+    </div>
+    <div class="actions mt">
+      <button class="btn btn-primary" type="submit">Zapisz klienta</button>
+      <button class="btn" type="button" onclick="resetForm()">Wyczyść</button>
+    </div>
+  </form>
+</section>
+
+<section class="card">
+  <h2>Lista klientów ({{ clients|length }})</h2>
+  <table class="grid">
+    <thead><tr><th>Nazwa</th><th>Adres</th><th>Kontakt</th><th class="actions">Działania</th></tr></thead>
+    <tbody>
+      {% for c in clients %}
+      <tr>
+        <td>{{ c['nazwa'] }}</td>
+        <td>{{ c['adres_html']|safe }}</td>
+        <td>{{ c['kontakt_html']|safe }}</td>
+        <td class="actions">
+          <button class="btn btn-sm" type="button"
+            onclick='edytuj({{ {"id":c["id"],"nazwa":c["nazwa"],"adres_html":c["adres_html"],"kontakt_html":c["kontakt_html"]}|tojson }})'>Edytuj</button>
+          <form method="post" action="{{ url_for('klienci_usun', cid=c['id']) }}" class="inline"
+                onsubmit="return confirm('Usunąć klienta?');">
+            <button class="btn btn-sm btn-danger" type="submit">Usuń</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function edytuj(c) {
+  document.getElementById("form-tytul").textContent = "Edytuj klienta";
+  document.getElementById("k-id").value = c.id;
+  document.getElementById("k-nazwa").value = c.nazwa || "";
+  document.getElementById("k-adres").value = (c.adres_html || "").replace(/<br\s*\/?>/gi, "\n");
+  document.getElementById("k-kontakt").value = (c.kontakt_html || "").replace(/<br\s*\/?>/gi, "\n");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+function resetForm() {
+  document.getElementById("kli-form").reset();
+  document.getElementById("k-id").value = "";
+  document.getElementById("form-tytul").textContent = "Dodaj klienta";
+}
+</script>
+{% endblock %}

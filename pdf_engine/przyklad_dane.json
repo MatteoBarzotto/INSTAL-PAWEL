@@ -1,0 +1,107 @@
+{
+  "wystawca": {
+    "nazwa": "INSTAL-PAWEŁ",
+    "podtytul": "Paweł Kowalski · Usługi Elektryczne",
+    "wordmark": "INSTAL-PAWEL",
+    "wordmark_sub": "USŁUGI ELEKTRYCZNE",
+    "nip": "0000000000",
+    "adres": "ul. Przykładowa 1, 62-300 Września",
+    "tel": "+48 500 100 200",
+    "email": "instal.pawel@example.com"
+  },
+  "zamawiajacy": {
+    "nazwa": "BUDMAX Sp. z o.o.",
+    "adres_html": "ul. Budowlana 7<br/>60-100 Poznań<br/>www.budmax.example.pl",
+    "kontakt_html": "Jan Nowak – Kierownik Budowy<br/>tel.: +48 600 100 200<br/>jan.nowak@budmax.example.pl"
+  },
+  "meta": { "tytul": "WYCENA", "numer": "01/06/2026", "data": "24.06.2026" },
+  "przedmiot": "Kompleksowa dostawa i montaż dwóch instalacji fotowoltaicznych off-grid posadowionych na kontenerach, wraz z uruchomieniem oraz zasileniem stróżówki.",
+  "pozycje": [
+    { "nazwa": "Moduły fotowoltaiczne JINKO 510 Wp", "ilosc": "8 szt.", "brutto": 3150 },
+    { "nazwa": "Inwertery off-grid SinusPro Ultra-M 6500", "ilosc": "2 szt.", "brutto": 4200 },
+    { "nazwa": "Akumulatory LiFePO4 12,8 V / 200 Ah (VOLT Polska)", "ilosc": "4 szt.", "brutto": 8120 },
+    { "nazwa": "Rozdzielnice AC/DC (aparatura Schneider Acti9)", "ilosc": "2 zest.", "brutto": 2450 },
+    { "nazwa": "Konstrukcja wsporcza – system BAKS", "ilosc": "2 zest.", "brutto": 2200 },
+    { "nazwa": "Materiały pomocnicze (okablowanie, uziemienie, osprzęt)", "ilosc": "kpl.", "brutto": 2200 }
+  ],
+  "robocizna": {
+    "opis": "Robocizna – montaż i uruchomienie (2 kontenery + zasilenie stróżówki)",
+    "kwota": 4500,
+    "vat_zwolniona": true
+  },
+  "spec_techniczna": [
+    { "tytul": "2.1&nbsp;&nbsp;Moduły fotowoltaiczne", "parametry": [
+      ["Producent", "JINKO Solar"],
+      ["Moc nominalna modułu", "510 Wp"],
+      ["Technologia", "ogniwa monokrystaliczne"],
+      ["Ilość", "8 szt. (4 szt. na kontener)"],
+      ["Łączna moc instalacji", "4,08 kWp (2 × 2,04 kWp)"]
+    ]},
+    { "tytul": "2.2&nbsp;&nbsp;Inwertery (przetwornice off-grid)", "parametry": [
+      ["Producent / model", "VOLT Polska – SinusPro Ultra-M 6500"],
+      ["Typ", "inwerter solarny off-grid z wbudowanym regulatorem MPPT"],
+      ["Napięcie pracy", "24 V DC / 230 V AC"],
+      ["Moc ciągła / szczytowa", "3000 W / 6500 W"],
+      ["Regulator ładowania solarnego", "MPPT 60 A"],
+      ["Ilość", "2 szt. (1 szt. na kontener)"]
+    ]},
+    { "tytul": "2.3&nbsp;&nbsp;Akumulatory (bank energii)", "parametry": [
+      ["Producent", "VOLT Polska"],
+      ["Technologia", "LiFePO4 (litowo-żelazowo-fosforanowa)"],
+      ["Napięcie / pojemność", "12,8 V / 200 Ah (200 A) – 2,56 kWh / szt."],
+      ["BMS i komunikacja", "wbudowany układ BMS, monitoring Bluetooth"],
+      ["Wyposażenie dodatkowe", "wbudowana mata grzewcza (praca w niskich temperaturach)"],
+      ["Masa", "18,5 kg / szt."],
+      ["Ilość", "4 szt. (2 szt. na kontener)"],
+      ["Konfiguracja banku", "2 × szeregowo = 25,6 V / 200 Ah (5,12 kWh) na kontener"],
+      ["Łączna pojemność", "10,24 kWh"]
+    ]},
+    { "tytul": "2.4&nbsp;&nbsp;Rozdzielnice AC/DC", "parametry": [
+      ["Obudowa", "rozdzielnica modułowa 1 × 12"],
+      ["Rozłącznik DC", "Schneider Acti9 SW60 DC – 50 A, 2P, 1000 V DC"],
+      ["Ogranicznik przepięć DC", "Schneider Acti9 iPRD-DC40r-T2, typ 2, 3-biegunowy, 1000 V, 65 kA, ze stykiem (A9L40281)"],
+      ["Strona AC", "wprowadzenie zasilania z falownika przewodem OWY 3×4 mm² do rozdzielnicy kontenera"],
+      ["Ilość", "2 zestawy (1 na kontener)"]
+    ]}
+  ],
+  "konstrukcja": {
+    "tytul": "2.5&nbsp;&nbsp;Konstrukcja wsporcza – system BAKS",
+    "opis": [
+      "<b>Producent i certyfikacja:</b> kompleksowy system montażowy BAKS; elementy posiadają deklaracje właściwości użytkowych i certyfikaty CE oraz spełniają normy obciążenia wiatrem i śniegiem wg Eurokodów.",
+      "<b>Typ konstrukcji:</b> trójkąty montażowe średnie z regulowanym kątem nachylenia, dedykowane do dachów płaskich; orientacja modułów pionowa.",
+      "<b>Posadowienie (system hybrydowy):</b> podstawy balastowe BAKS PBK40 dociążone systemowymi bloczkami betonowymi (typu Canold) oraz dodatkowe kotwienie mechaniczne konstrukcji bezpośrednio do stalowej ramy nośnej kontenera.",
+      "<b>Zabezpieczenie dachu:</b> pod konstrukcją i podstawami balastowymi gumy wibroizolacyjne BAKS SBV – ochrona poszycia przed przetarciem oraz tłumienie drgań."
+    ],
+    "naglowek_wykazu": "Wykaz elementów konstrukcji (2 zestawy)",
+    "elementy": [
+      ["K-07-S-RN", "Trójkąt montażowy średni regulowany (orientacja pionowa)", "12", "szt."],
+      ["894633", "BAKS Profil aluminiowy PAL40H40/3,3", "8", "szt."],
+      ["890510", "Łącznik profila aluminiowego PLPAN40 (STD)", "8", "szt."],
+      ["00036567", "Śruba A2 M10×20", "24", "szt."],
+      ["00036572", "Nakrętka kołnierzowa A2 M10", "24", "szt."],
+      ["600909", "Nakrętka ślizgowa z kulką NKWSM8A", "24", "szt."],
+      ["898525", "Śruba imbusowa M8×25 A2", "28", "szt."],
+      ["897302", "Uchwyt pośredni panela PUFL czarny (RAL 9005)", "16", "szt."],
+      ["8973302", "BAKS Uchwyt boczny panela BUF30L czarny (RAL 9005)", "8", "szt."],
+      ["895507", "Guma wibroizolacyjna podkładowa SBV 250×350", "14", "szt."],
+      ["858440", "Podstawa balastowa BAKS PBK40", "14", "szt."]
+    ],
+    "nota": "Dodatkowo: bloczki balastowe betonowe (typu Canold) – ilość dobierana wg obliczeń obciążeń dla danej lokalizacji."
+  },
+  "materialy_pomocnicze": [
+    "<b>Okablowanie DC:</b> przewód solarny miedziany (cynowany) 6 mm² w podwójnej izolacji, pełna odporność na UV i warunki atmosferyczne.",
+    "<b>Konektory DC:</b> oryginalne złącza solarne hermetyczne MC4 (IP68).",
+    "<b>Mostki akumulatorowe:</b> przewody miedziane 50 mm² z fabrycznie zaprasowanymi końcówkami oczkowymi.",
+    "<b>Okablowanie AC:</b> przewód elastyczny OWY 3×4 mm² (450/750 V) – zasilanie z falownika do rozdzielnicy głównej kontenera.",
+    "<b>Instalacja uziemiająca:</b> przewód miedziany LgY 16 mm² (żółto-zielony) – wyrównanie potencjałów ram kontenerów, konstrukcji i rozdzielnic.",
+    "<b>Osprzęt uziomowy:</b> atestowane stalowe szpilki (pręty) uziomowe z zaciskami krzyżowymi (cel: rezystancja uziemienia < 10 Ω).",
+    "<b>Trasy kablowe:</b> korytka PVC natynkowe (wewnętrzne) oraz peszle karbowane wzmocnione UV (zewnętrzne) z uchwytami.",
+    "<b>Elementy montażowe:</b> opaski kablowe UV, śruby, podkładki i drobny osprzęt złączny."
+  ],
+  "warunki": [
+    "Oferta ważna 30 dni od daty wystawienia.",
+    "Termin realizacji do uzgodnienia z Zamawiającym.",
+    "Forma i termin płatności do ustalenia stron.",
+    "Dokładne modele/serie urządzeń mogą zostać potwierdzone na etapie zamówienia (równoważne parametry)."
+  ]
+}

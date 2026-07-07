@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Umowy — INSTAL-PAWEŁ{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Umowy</h1>
+  <a class="btn btn-primary" href="{{ url_for('umowa_nowa') }}">+ Nowa umowa</a>
+</div>
+
+{% if contracts %}
+<table class="grid">
+  <thead>
+    <tr><th>Numer</th><th>Data zawarcia</th><th>Klient</th><th class="r">Kwota</th><th class="c">Status</th><th class="actions">Działania</th></tr>
+  </thead>
+  <tbody>
+    {% for u in contracts %}
+    <tr>
+      <td class="mono">{{ u["numer"] }}</td>
+      <td>{{ u["data"] }}</td>
+      <td>{{ u["client_nazwa"] or "—" }}</td>
+      <td class="r nowrap">{{ u["kwota"]|money }}</td>
+      <td class="c">
+        <form method="post" action="{{ url_for('umowa_status', uid=u['id']) }}" class="inline">
+          <select name="status" class="status status-{{ 'zaakceptowana' if u['status'] == 'podpisana' else ('wysłana' if u['status'] == 'zakończona' else 'szkic') }}" onchange="this.form.submit()">
+            {% for s in ['szkic','podpisana','zakończona'] %}
+            <option value="{{ s }}" {{ 'selected' if (u['status'] or 'szkic') == s }}>{{ s }}</option>
+            {% endfor %}
+          </select>
+        </form>
+      </td>
+      <td class="actions">
+        <button class="btn btn-primary btn-sm" onclick="genPdf({{ u['id'] }}, this)">Generuj PDF</button>
+        <a class="btn btn-sm" href="{{ url_for('umowa_edytuj', uid=u['id']) }}">Edytuj</a>
+        <form method="post" action="{{ url_for('umowa_duplikuj', uid=u['id']) }}" class="inline">
+          <button class="btn btn-sm" type="submit">Duplikuj</button>
+        </form>
+        <form method="post" action="{{ url_for('umowa_usun', uid=u['id']) }}" class="inline"
+              onsubmit="return confirm('Usunąć tę umowę?');">
+          <button class="btn btn-sm btn-danger" type="submit">Usuń</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="empty">
+  <p>Nie masz jeszcze żadnych umów.</p>
+  <a class="btn btn-primary btn-lg" href="{{ url_for('umowa_nowa') }}">Utwórz pierwszą umowę</a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function genPdf(id, btn) {
+  const t = btn.textContent;
+  btn.disabled = true; btn.textContent = "Generuję…";
+  fetch(`/api/umowa/${id}/pdf`, {method: "POST"})
+    .then(r => r.json())
+    .then(d => {
+      btn.disabled = false; btn.textContent = t;
+      if (!d.ok) { alert(d.blad || "Nie udało się wygenerować PDF."); return; }
+    })
+    .catch(e => { btn.disabled = false; btn.textContent = t; alert("Błąd: " + e); });
+}
+</script>
+{% endblock %}
