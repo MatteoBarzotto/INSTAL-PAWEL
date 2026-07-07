@@ -1,0 +1,33 @@
+[
+  {"numer": "01/2026", "wyst_date": "2026-01-01", "kwota": 650,  "osoba_fiz": 1, "status": "zapłacona", "opis": "Faktura archiwalna (spoza programu) — dokładny dzień wystawienia na papierowym oryginale"},
+  {"numer": "02/2026", "wyst_date": "2026-01-01", "kwota": 420,  "osoba_fiz": 0, "status": "zapłacona", "opis": "Faktura archiwalna (spoza programu) — dokładny dzień wystawienia na papierowym oryginale"},
+  {"numer": "03/2026", "wyst_date": "2026-01-01", "kwota": 150,  "osoba_fiz": 1, "status": "zapłacona", "opis": "Faktura archiwalna (spoza programu) — dokładny dzień wystawienia na papierowym oryginale"},
+  {"numer": "04/2026", "wyst_date": "2026-01-01", "kwota": 250,  "osoba_fiz": 0, "status": "zapłacona", "opis": "Faktura archiwalna (spoza programu) — dokładny dzień wystawienia na papierowym oryginale"},
+  {"numer": "05/2026", "wyst_date": "2026-01-01", "kwota": 700,  "osoba_fiz": 0, "status": "zapłacona", "opis": "Faktura archiwalna (spoza programu) — dokładny dzień wystawienia na papierowym oryginale"},
+  {"numer": "06/2026", "wyst_date": "2026-01-01", "kwota": 120,  "osoba_fiz": 0, "status": "zapłacona", "opis": "Faktura archiwalna (spoza programu) — dokładny dzień wystawienia na papierowym oryginale"},
+  {"numer": "07/2026", "wyst_date": "2026-01-01", "kwota": 1000, "osoba_fiz": 0, "status": "zapłacona", "opis": "Faktura archiwalna (spoza programu) — dokładny dzień wystawienia na papierowym oryginale"},
+  {"numer": "08/2026", "wyst_date": "2026-01-01", "kwota": 500,  "osoba_fiz": 0, "status": "zapłacona", "opis": "Faktura archiwalna (spoza programu) — dokładny dzień wystawienia na papierowym oryginale"},
+  {"numer": "09/2026", "wyst_date": "2026-01-01", "kwota": 220,  "osoba_fiz": 0, "status": "zapłacona", "opis": "Faktura archiwalna (spoza programu) — dokładny dzień wystawienia na papierowym oryginale"},
+  {"numer": "10/2026", "wyst_date": "2026-01-01", "kwota": 500,  "osoba_fiz": 0, "status": "zapłacona", "opis": "Faktura archiwalna (spoza programu) — dokładny dzień wystawienia na papierowym oryginale"},
+
+  {"numer": "11/2026", "wyst_date": "2026-02-01", "kwota": 200,  "osoba_fiz": 0, "status": "zapłacona", "opis": "Faktura archiwalna (spoza programu) — dokładny dzień wystawienia na papierowym oryginale"},
+  {"numer": "12/2026", "wyst_date": "2026-02-01", "kwota": 200,  "osoba_fiz": 0, "status": "zapłacona", "opis": "Faktura archiwalna (spoza programu) — dokładny dzień wystawienia na papierowym oryginale"},
+  {"numer": "13/2026", "wyst_date": "2026-02-01", "kwota": 500,  "osoba_fiz": 0, "status": "zapłacona", "opis": "Faktura archiwalna (spoza programu) — dokładny dzień wystawienia na papierowym oryginale"},
+  {"numer": "14/2026", "wyst_date": "2026-02-01", "kwota": 800,  "osoba_fiz": 0, "status": "zapłacona", "opis": "Faktura archiwalna (spoza programu) — dokładny dzień wystawienia na papierowym oryginale"},
+  {"numer": "15/2026", "wyst_date": "2026-02-01", "kwota": 320,  "osoba_fiz": 1, "status": "zapłacona", "opis": "Faktura archiwalna (spoza programu) — dokładny dzień wystawienia na papierowym oryginale"},
+
+  {"numer": "16/2026", "wyst_date": "2026-03-01", "kwota": 4450, "osoba_fiz": 0, "status": "zapłacona", "opis": "Faktura archiwalna (spoza programu) — dokładny dzień wystawienia na papierowym oryginale"},
+  {"numer": "17/2026", "wyst_date": "2026-03-01", "kwota": 2500, "osoba_fiz": 0, "status": "zapłacona", "opis": "Faktura archiwalna (spoza programu) — dokładny dzień wystawienia na papierowym oryginale"},
+  {"numer": "18/2026", "wyst_date": "2026-03-01", "kwota": 180,  "osoba_fiz": 0, "status": "zapłacona", "opis": "Faktura archiwalna (spoza programu) — dokładny dzień wystawienia na papierowym oryginale"},
+  {"numer": "19/2026", "wyst_date": "2026-03-01", "kwota": 400,  "osoba_fiz": 0, "status": "zapłacona", "opis": "Faktura archiwalna (spoza programu) — dokładny dzień wystawienia na papierowym oryginale"},
+  {"numer": "20/2026", "wyst_date": "2026-03-01", "kwota": 600,  "osoba_fiz": 0, "status": "zapłacona", "opis": "Faktura archiwalna (spoza programu) — dokładny dzień wystawienia na papierowym oryginale"},
+  {"numer": "21/2026", "wyst_date": "2026-03-01", "kwota": 350,  "osoba_fiz": 0, "status": "zapłacona", "opis": "Faktura archiwalna (spoza programu) — dokładny dzień wystawienia na papierowym oryginale"},
+
+  {"numer": "22/2026", "wyst_date": "2026-04-01", "kwota": 4000, "osoba_fiz": 1, "status": "zapłacona", "opis": "Faktura archiwalna (spoza programu) — dokładny dzień wystawienia na papierowym oryginale"},
+  {"numer": "23/2026", "wyst_date": "2026-04-01", "kwota": 1360, "osoba_fiz": 0, "status": "zapłacona", "opis": "Faktura archiwalna (spoza programu) — dokładny dzień wystawienia na papierowym oryginale"},
+
+  {"numer": "24/2026", "wyst_date": "2026-05-01", "kwota": 170,  "osoba_fiz": 0, "status": "zapłacona", "opis": "Faktura archiwalna (spoza programu) — dokładny dzień wystawienia na papierowym oryginale"},
+  {"numer": "25/2026", "wyst_date": "2026-05-01", "kwota": 700,  "osoba_fiz": 0, "status": "zapłacona", "opis": "Faktura archiwalna (spoza programu) — dokładny dzień wystawienia na papierowym oryginale"},
+  {"numer": "26/2026", "wyst_date": "2026-05-01", "kwota": 700,  "osoba_fiz": 0, "status": "zapłacona", "opis": "Faktura archiwalna (spoza programu) — dokładny dzień wystawienia na papierowym oryginale"},
+  {"numer": "27/2026", "wyst_date": "2026-05-01", "kwota": 3800, "osoba_fiz": 0, "status": "zapłacona", "opis": "Faktura archiwalna (spoza programu) — dokładny dzień wystawienia na papierowym oryginale"}
+]
