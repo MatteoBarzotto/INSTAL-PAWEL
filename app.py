@@ -54,6 +54,60 @@ def _auto_backup():
 _auto_backup()
 
 
+def _import_faktur():
+    """Jednorazowy import faktur archiwalnych (wystawionych poza programem).
+
+    Plik `import_faktur.json` obok app.py — lista wpisów:
+      { "numer", "wyst_date" (RRRR-MM-DD), "term_date" (opcjonalne), "nabywca",
+        "kwota", "osoba_fiz" (0/1), "status" ("zapłacona"/"niezapłacona"),
+        "opis" (opcjonalna nazwa pozycji) }
+    Import jest bezpieczny przy każdym starcie: faktura o numerze, który już
+    jest w bazie, zostaje pominięta. Dzięki temu plik może przyjechać
+    z aktualizacją programu i niczego nie zdubluje.
+    """
+    plik = os.path.join(os.path.dirname(os.path.abspath(__file__)), "import_faktur.json")
+    if not os.path.exists(plik):
+        return
+    try:
+        with open(plik, encoding="utf-8") as f:
+            wpisy = json.load(f)
+    except (OSError, ValueError):
+        return
+    conn = db.get_db()
+    dodane = 0
+    for w in wpisy or []:
+        numer = (w.get("numer") or "").strip()
+        if not numer:
+            continue
+        if conn.execute("SELECT 1 FROM invoices WHERE numer=?", (numer,)).fetchone():
+            continue  # już jest — nie dubluj
+        kwota = float(w.get("kwota") or 0)
+        opis = w.get("opis") or "Usługa elektryczna (faktura archiwalna, wystawiona poza programem)"
+        stan = {
+            "fields": {"m_numer": numer, "m_wyst": w.get("wyst_date", ""),
+                       "m_sprz": w.get("wyst_date", ""), "m_term": w.get("term_date", ""),
+                       "n_nazwa": w.get("nabywca", ""), "n_adres": "", "n_nip": "", "n_regon": ""},
+            "items": [{"nazwa": opis, "ilosc": "1", "jm": "usł.",
+                       "cena": f"{kwota:.2f}".replace(".", ",")}],
+            "toggles": {"blueprint": True, "regon": False, "bank": True, "klauzula": True,
+                        "osoba_fiz": bool(w.get("osoba_fiz"))},
+        }
+        conn.execute(
+            """INSERT INTO invoices (numer, wyst_date, term_date, nabywca, suma, osoba_fiz, status, data_json)
+               VALUES (?,?,?,?,?,?,?,?)""",
+            (numer, w.get("wyst_date", ""), w.get("term_date", ""), w.get("nabywca", ""),
+             kwota, 1 if w.get("osoba_fiz") else 0, w.get("status") or "zapłacona",
+             json.dumps(stan, ensure_ascii=False)))
+        dodane += 1
+    conn.commit()
+    conn.close()
+    if dodane:
+        print(f"  Zaimportowano {dodane} faktur archiwalnych z import_faktur.json.")
+
+
+_import_faktur()
+
+
 # ------------------------------------------------------------------ pomocnicze
 def _settings(conn):
     return conn.execute("SELECT * FROM settings WHERE id=1").fetchone()
