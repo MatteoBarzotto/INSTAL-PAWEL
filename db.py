@@ -88,8 +88,9 @@ CREATE TABLE IF NOT EXISTS contracts (
 
 CREATE TABLE IF NOT EXISTS invoices (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    numer TEXT,                        -- np. "FV / 01 / 07 / 2026"
+    numer TEXT,                        -- np. "30/2026" (numeracja ciągła w roku)
     wyst_date TEXT,                    -- data wystawienia (ISO)
+    sprz_date TEXT,                    -- data sprzedaży (ISO) — o miesiącu rozliczenia decyduje ta data
     term_date TEXT,                    -- termin płatności (ISO) — do wykrywania "po terminie"
     nabywca TEXT,                      -- nazwa nabywcy (do listy)
     suma REAL DEFAULT 0,
@@ -111,6 +112,14 @@ def _migrate(conn):
     addcol("quotes", "status", "status TEXT DEFAULT 'szkic'")
     addcol("invoices", "status", "status TEXT DEFAULT 'niezapłacona'")
     addcol("invoices", "term_date", "term_date TEXT")
+    # sprz_date: data sprzedaży (decyduje o miesiącu rozliczenia; puste = jak wystawienia)
+    if addcol("invoices", "sprz_date", "sprz_date TEXT"):
+        for r in conn.execute("SELECT id, wyst_date, data_json FROM invoices").fetchall():
+            try:
+                sprz = (json.loads(r[2] or "{}").get("fields", {}).get("m_sprz") or "").strip()
+            except (ValueError, TypeError):
+                sprz = ""
+            conn.execute("UPDATE invoices SET sprz_date=? WHERE id=?", (sprz or r[1] or "", r[0]))
     # osoba_fiz: 1 = nabywca to osoba fizyczna bez NIP (limit kasy fiskalnej 20 000 zł/rok)
     if addcol("invoices", "osoba_fiz", "osoba_fiz INTEGER DEFAULT 0"):
         # uzupełnij istniejące faktury: brak NIP nabywcy = osoba fizyczna

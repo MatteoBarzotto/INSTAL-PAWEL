@@ -58,7 +58,8 @@ def _import_faktur():
     """Jednorazowy import faktur archiwalnych (wystawionych poza programem).
 
     Plik `import_faktur.json` obok app.py — lista wpisów:
-      { "numer", "wyst_date" (RRRR-MM-DD), "term_date" (opcjonalne), "nabywca",
+      { "numer", "wyst_date" (RRRR-MM-DD), "sprz_date" (opc., domyślnie=wyst_date),
+        "term_date" (opc.), "nabywca", "nip" (opc.), "adres" (opc.),
         "kwota", "osoba_fiz" (0/1), "status" ("zapłacona"/"niezapłacona"),
         "opis" (opcjonalna nazwa pozycji) }
     Import jest bezpieczny przy każdym starcie: faktura o numerze, który już
@@ -83,19 +84,21 @@ def _import_faktur():
             continue  # już jest — nie dubluj
         kwota = float(w.get("kwota") or 0)
         opis = w.get("opis") or "Usługa elektryczna (faktura archiwalna, wystawiona poza programem)"
+        sprz = w.get("sprz_date") or w.get("wyst_date", "")
         stan = {
             "fields": {"m_numer": numer, "m_wyst": w.get("wyst_date", ""),
-                       "m_sprz": w.get("wyst_date", ""), "m_term": w.get("term_date", ""),
-                       "n_nazwa": w.get("nabywca", ""), "n_adres": "", "n_nip": "", "n_regon": ""},
+                       "m_sprz": sprz, "m_term": w.get("term_date", ""),
+                       "n_nazwa": w.get("nabywca", ""), "n_adres": w.get("adres", ""),
+                       "n_nip": w.get("nip", ""), "n_regon": ""},
             "items": [{"nazwa": opis, "ilosc": "1", "jm": "usł.",
                        "cena": f"{kwota:.2f}".replace(".", ",")}],
             "toggles": {"blueprint": True, "regon": False, "bank": True, "klauzula": True,
                         "osoba_fiz": bool(w.get("osoba_fiz"))},
         }
         conn.execute(
-            """INSERT INTO invoices (numer, wyst_date, term_date, nabywca, suma, osoba_fiz, status, data_json)
-               VALUES (?,?,?,?,?,?,?,?)""",
-            (numer, w.get("wyst_date", ""), w.get("term_date", ""), w.get("nabywca", ""),
+            """INSERT INTO invoices (numer, wyst_date, sprz_date, term_date, nabywca, suma, osoba_fiz, status, data_json)
+               VALUES (?,?,?,?,?,?,?,?,?)""",
+            (numer, w.get("wyst_date", ""), sprz, w.get("term_date", ""), w.get("nabywca", ""),
              kwota, 1 if w.get("osoba_fiz") else 0, w.get("status") or "zapłacona",
              json.dumps(stan, ensure_ascii=False)))
         dodane += 1
@@ -127,15 +130,23 @@ def _next_numer(conn, when=None):
 
 
 def _next_faktura_numer(conn, when=None):
-    """Kolejny numer faktury 'FV / NN / MM / RRRR' (auto-inkrement w miesiącu)."""
+    """Kolejny numer faktury 'NN/RRRR' — numeracja ciągła w roku (tak jak w papierowej
+    ewidencji Pawła: 01/2026, 02/2026, ...). Patrzy na najwyższy numer z bieżącego roku,
+    rozumie też stary format programu 'FV / NN / MM / RRRR'."""
+    import re
     when = when or datetime.date.today()
-    mm, yyyy = when.strftime("%m"), when.strftime("%Y")
+    yyyy = when.strftime("%Y")
     n = 0
-    for r in conn.execute("SELECT numer FROM invoices WHERE numer LIKE ?", (f"%/ {mm} / {yyyy}",)):
-        parts = [p.strip() for p in str(r["numer"]).split("/")]
-        if len(parts) >= 2 and parts[1].isdigit():
-            n = max(n, int(parts[1]))
-    return f"FV / {n + 1:02d} / {mm} / {yyyy}"
+    for r in conn.execute("SELECT numer FROM invoices WHERE numer LIKE ?", ("%" + yyyy,)):
+        numer = str(r["numer"]).strip()
+        m = re.match(r"^(\d+)\s*/\s*" + yyyy + "$", numer)          # 30/2026
+        if m:
+            n = max(n, int(m.group(1)))
+            continue
+        m = re.match(r"^FV\s*/\s*(\d+)\s*/\s*\d{2}\s*/\s*" + yyyy + "$", numer)  # FV / 01 / 07 / 2026
+        if m:
+            n = max(n, int(m.group(1)))
+    return f"{n + 1:02d}/{yyyy}"
 
 
 def _parse_num(v):
@@ -276,14 +287,16 @@ def index():
     niezaplacone = conn.execute(
         "SELECT COUNT(*) AS c, COALESCE(SUM(suma),0) AS s FROM invoices WHERE status='niezapłacona'"
     ).fetchone()
+    # o miesiącu/roku rozliczenia decyduje data sprzedaży (gdy pusta — data wystawienia)
+    data_rozl = "COALESCE(NULLIF(sprz_date,''), wyst_date)"
     obrot_rok = conn.execute(
-        "SELECT COALESCE(SUM(suma),0) AS s FROM invoices WHERE wyst_date LIKE ?",
+        f"SELECT COALESCE(SUM(suma),0) AS s FROM invoices WHERE {data_rozl} LIKE ?",
         (rok + "-%",)).fetchone()["s"]
     obrot_mies = conn.execute(
-        "SELECT COALESCE(SUM(suma),0) AS s FROM invoices WHERE wyst_date LIKE ?",
+        f"SELECT COALESCE(SUM(suma),0) AS s FROM invoices WHERE {data_rozl} LIKE ?",
         (miesiac + "-%",)).fetchone()["s"]
     obrot_osfiz = conn.execute(
-        "SELECT COALESCE(SUM(suma),0) AS s FROM invoices WHERE osoba_fiz=1 AND wyst_date LIKE ?",
+        f"SELECT COALESCE(SUM(suma),0) AS s FROM invoices WHERE osoba_fiz=1 AND {data_rozl} LIKE ?",
         (rok + "-%",)).fetchone()["s"]
     # ostatnie dokumenty (wszystkie typy razem, wg czasu utworzenia)
     ostatnie = []
@@ -517,8 +530,8 @@ def wycena_na_fakture(qid):
         "toggles": {"blueprint": True, "regon": False, "bank": True, "klauzula": True},
     }
     cur = conn.execute(
-        "INSERT INTO invoices (numer, wyst_date, term_date, nabywca, suma, osoba_fiz, data_json) VALUES (?,?,?,?,?,?,?)",
-        (numer, today.strftime("%Y-%m-%d"), termin, zam.get("nazwa", ""),
+        "INSERT INTO invoices (numer, wyst_date, sprz_date, term_date, nabywca, suma, osoba_fiz, data_json) VALUES (?,?,?,?,?,?,?,?)",
+        (numer, today.strftime("%Y-%m-%d"), today.strftime("%Y-%m-%d"), termin, zam.get("nazwa", ""),
          _suma_items(items), _osoba_fiz(stan), json.dumps(stan, ensure_ascii=False)))
     new_id = cur.lastrowid
     conn.commit()
@@ -852,6 +865,7 @@ def api_faktura_zapisz():
     suma = _suma_items(items)
     numer = fields.get("m_numer", "")
     wyst = fields.get("m_wyst", "")
+    sprz = (fields.get("m_sprz") or "").strip() or wyst  # data sprzedaży decyduje o miesiącu
     termin = fields.get("m_term", "")
     nabywca = fields.get("n_nazwa", "")
     osfiz = _osoba_fiz(stan)
@@ -859,12 +873,12 @@ def api_faktura_zapisz():
     fid = stan.get("id")
     if fid:
         conn.execute(
-            "UPDATE invoices SET numer=?, wyst_date=?, term_date=?, nabywca=?, suma=?, osoba_fiz=?, data_json=? WHERE id=?",
-            (numer, wyst, termin, nabywca, suma, osfiz, data_json, fid))
+            "UPDATE invoices SET numer=?, wyst_date=?, sprz_date=?, term_date=?, nabywca=?, suma=?, osoba_fiz=?, data_json=? WHERE id=?",
+            (numer, wyst, sprz, termin, nabywca, suma, osfiz, data_json, fid))
     else:
         cur = conn.execute(
-            "INSERT INTO invoices (numer, wyst_date, term_date, nabywca, suma, osoba_fiz, data_json) VALUES (?,?,?,?,?,?,?)",
-            (numer, wyst, termin, nabywca, suma, osfiz, data_json))
+            "INSERT INTO invoices (numer, wyst_date, sprz_date, term_date, nabywca, suma, osoba_fiz, data_json) VALUES (?,?,?,?,?,?,?,?)",
+            (numer, wyst, sprz, termin, nabywca, suma, osfiz, data_json))
         fid = cur.lastrowid
     conn.commit()
     conn.close()
@@ -887,8 +901,8 @@ def faktura_duplikuj(fid):
     stan["fields"]["m_wyst"] = today
     stan["fields"]["m_sprz"] = today
     cur = conn.execute(
-        "INSERT INTO invoices (numer, wyst_date, nabywca, suma, osoba_fiz, data_json) VALUES (?,?,?,?,?,?)",
-        (numer, today, f["nabywca"], f["suma"], _osoba_fiz(stan), json.dumps(stan, ensure_ascii=False)))
+        "INSERT INTO invoices (numer, wyst_date, sprz_date, nabywca, suma, osoba_fiz, data_json) VALUES (?,?,?,?,?,?,?)",
+        (numer, today, today, f["nabywca"], f["suma"], _osoba_fiz(stan), json.dumps(stan, ensure_ascii=False)))
     new_id = cur.lastrowid
     conn.commit()
     conn.close()
@@ -1074,8 +1088,8 @@ def umowa_na_fakture(uid):
         "toggles": {"blueprint": True, "regon": False, "bank": True, "klauzula": True},
     }
     cur = conn.execute(
-        "INSERT INTO invoices (numer, wyst_date, term_date, nabywca, suma, osoba_fiz, data_json) VALUES (?,?,?,?,?,?,?)",
-        (numer, today.strftime("%Y-%m-%d"), termin, zam.get("nazwa", ""),
+        "INSERT INTO invoices (numer, wyst_date, sprz_date, term_date, nabywca, suma, osoba_fiz, data_json) VALUES (?,?,?,?,?,?,?,?)",
+        (numer, today.strftime("%Y-%m-%d"), today.strftime("%Y-%m-%d"), termin, zam.get("nazwa", ""),
          _suma_items(items), _osoba_fiz(stan), json.dumps(stan, ensure_ascii=False)))
     new_id = cur.lastrowid
     conn.commit()

@@ -29,5 +29,12 @@
   {"numer": "24/2026", "wyst_date": "2026-05-01", "kwota": 170,  "osoba_fiz": 0, "status": "zapłacona", "opis": "Faktura archiwalna (spoza programu) — dokładny dzień wystawienia na papierowym oryginale"},
   {"numer": "25/2026", "wyst_date": "2026-05-01", "kwota": 700,  "osoba_fiz": 0, "status": "zapłacona", "opis": "Faktura archiwalna (spoza programu) — dokładny dzień wystawienia na papierowym oryginale"},
   {"numer": "26/2026", "wyst_date": "2026-05-01", "kwota": 700,  "osoba_fiz": 0, "status": "zapłacona", "opis": "Faktura archiwalna (spoza programu) — dokładny dzień wystawienia na papierowym oryginale"},
-  {"numer": "27/2026", "wyst_date": "2026-05-01", "kwota": 3800, "osoba_fiz": 0, "status": "zapłacona", "opis": "Faktura archiwalna (spoza programu) — dokładny dzień wystawienia na papierowym oryginale"}
+  {"numer": "27/2026", "wyst_date": "2026-05-01", "kwota": 3800, "osoba_fiz": 0, "status": "zapłacona", "opis": "Faktura archiwalna (spoza programu) — dokładny dzień wystawienia na papierowym oryginale"},
+
+  {"numer": "28/2026", "wyst_date": "2026-06-29", "sprz_date": "2026-06-29", "term_date": "2026-07-06",
+   "nabywca": "Firma usługowa Sp. z o.o.", "nip": "0000000000", "adres": "ul. Przykładowa 5, 60-100 Poznań",
+   "kwota": 150, "osoba_fiz": 0, "status": "niezapłacona", "opis": "Wymiana zasilacza"},
+  {"numer": "29/2026", "wyst_date": "2026-06-29", "sprz_date": "2026-06-29",
+   "nabywca": "P.K.", "kwota": 1400, "osoba_fiz": 1, "status": "zapłacona",
+   "opis": "Rozbudowa instalacji elektrycznej w kuchni"}
 ]
