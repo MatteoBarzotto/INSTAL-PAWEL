@@ -1067,7 +1067,11 @@ def _umowa_assemble(conn, f):
         "termin_rozpoczecia": (f.get("termin_od") or "").strip(),
         "termin_zakonczenia": (f.get("termin_do") or "").strip(),
         "wynagrodzenie": {"kwota": _parse_num(f.get("kwota")),
-                          "zaliczka": _parse_num(f.get("zaliczka")),
+                          "zaliczka": (0.0 if (f.get("zaliczka_rodzaj") or "") == "brak"
+                                       else _parse_num(f.get("zaliczka"))),
+                          "zaliczka_rodzaj": (f.get("zaliczka_rodzaj") or "zaliczka").strip(),
+                          "zaliczka_opis": ("" if (f.get("zaliczka_rodzaj") or "") == "brak"
+                                            else (f.get("zaliczka_opis") or "").strip()),
                           "platnosc": (f.get("platnosc") or "").strip()},
         "gwarancja": (f.get("gwarancja") or "").strip(),
         "dodatkowe": _lines(f.get("dodatkowe")),
@@ -1086,8 +1090,10 @@ def umowy():
         try:
             wyn = (json.loads(r["data_json"] or "{}").get("wynagrodzenie") or {})
             d["ma_zaliczke"] = float(wyn.get("zaliczka") or 0) > 0
+            d["zal_nazwa"] = "zadatek" if (wyn.get("zaliczka_rodzaj") == "zadatek") else "zaliczka"
         except (ValueError, TypeError):
             d["ma_zaliczke"] = False
+            d["zal_nazwa"] = "zaliczka"
         contracts.append(d)
     return render_template("umowy.html", contracts=contracts)
 
@@ -1109,21 +1115,24 @@ def umowa_na_fakture(uid):
     wyn = ud.get("wynagrodzenie") or {}
     kwota = float(wyn.get("kwota") or 0)
     zaliczka = float(wyn.get("zaliczka") or 0)
+    zadatek = (wyn.get("zaliczka_rodzaj") == "zadatek")
     przedmiot = ud.get("przedmiot", "")
     numer_um = u["numer"] or ""
 
     if rodzaj == "zaliczkowa":
         if zaliczka <= 0:
             conn.close()
-            flash("Ta umowa nie ma zaliczki — wystaw fakturę końcową.", "ok")
+            flash("Ta umowa nie ma zaliczki ani zadatku — wystaw fakturę końcową.", "ok")
             return redirect(url_for("umowy"))
-        items = [{"nazwa": f"Zaliczka zgodnie z umową nr {numer_um} — {przedmiot}",
+        co = "Zadatek na materiał" if zadatek else "Zaliczka"
+        items = [{"nazwa": f"{co} zgodnie z umową nr {numer_um} — {przedmiot}",
                   "ilosc": "1", "jm": "usł.", "cena": f"{zaliczka:.2f}".replace(".", ",")}]
     else:
         do_zaplaty = max(0.0, kwota - zaliczka)
         nazwa = f"{przedmiot} — zgodnie z umową nr {numer_um}"
         if zaliczka > 0:
-            nazwa += f" (po rozliczeniu zaliczki {money(zaliczka)})"
+            nazwa += (f" (po rozliczeniu zadatku {money(zaliczka)})" if zadatek
+                      else f" (po rozliczeniu zaliczki {money(zaliczka)})")
         items = [{"nazwa": nazwa, "ilosc": "1", "jm": "usł.",
                   "cena": f"{do_zaplaty:.2f}".replace(".", ",")}]
 
@@ -1152,7 +1161,7 @@ def umowa_na_fakture(uid):
     new_id = cur.lastrowid
     conn.commit()
     conn.close()
-    opis = "zaliczkową" if rodzaj == "zaliczkowa" else "końcową"
+    opis = ("na zadatek" if zadatek else "zaliczkową") if rodzaj == "zaliczkowa" else "końcową"
     flash(f"Utworzono fakturę {opis} {numer} z umowy {numer_um} — sprawdź i zapisz.", "ok")
     return redirect(url_for("faktura_edytuj", fid=new_id))
 
@@ -1215,8 +1224,8 @@ def umowa_zapisz():
     data["_form"] = {k: f.get(k, "") for k in
                      ("client_id", "client_nazwa", "client_adres", "client_kontakt",
                       "numer", "data", "miejscowosc", "przedmiot", "zakres",
-                      "termin_od", "termin_do", "kwota", "zaliczka", "platnosc",
-                      "gwarancja", "dodatkowe")}
+                      "termin_od", "termin_do", "kwota", "zaliczka", "zaliczka_rodzaj",
+                      "zaliczka_opis", "platnosc", "gwarancja", "dodatkowe")}
     data_json = json.dumps(data, ensure_ascii=False)
     uid = f.get("id")
     args = (data["meta"]["numer"], data["meta"]["data"], cid, client.get("nazwa", ""),
@@ -1309,6 +1318,7 @@ def wycena_na_umowe(qid):
                             for p in qd.get("pozycje", [])),
         "termin_od": "", "termin_do": "",
         "kwota": f"{kwota:.2f}".replace(".", ","), "zaliczka": "",
+        "zaliczka_rodzaj": "zaliczka", "zaliczka_opis": "",
         "platnosc": "", "gwarancja": "24 miesiące", "dodatkowe": "",
     }
     ctx = _umowa_context(conn, None, form=form)

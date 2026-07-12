@@ -56,10 +56,21 @@
       <label>Rozpoczęcie prac <input name="termin_od" value="{{ form.get('termin_od') or '' }}" placeholder="np. 15.07.2026 albo „do uzgodnienia”"></label>
       <label>Zakończenie prac <input name="termin_do" value="{{ form.get('termin_do') or '' }}" placeholder="np. 31.07.2026"></label>
     </div>
-    <div class="row3">
+    <div class="row2">
       <label class="mt">Wynagrodzenie łącznie (zł) <input name="kwota" value="{{ form.get('kwota') or '' }}" placeholder="np. 18 500" oninput="slownie()"></label>
-      <label class="mt">Zaliczka (zł) <small>(puste = brak zaliczki)</small> <input name="zaliczka" value="{{ form.get('zaliczka') or '' }}"></label>
       <label class="mt">Gwarancja <input name="gwarancja" value="{{ form.get('gwarancja') or '24 miesiące' }}"></label>
+    </div>
+    {% set zal_rodzaj = form.get('zaliczka_rodzaj') or ('zaliczka' if form.get('zaliczka') else 'brak') %}
+    <div class="row3">
+      <label class="mt">Przedpłata
+        <select name="zaliczka_rodzaj" onchange="togglePrzedplata(this.value)">
+          <option value="brak" {{ 'selected' if zal_rodzaj == 'brak' }}>— brak —</option>
+          <option value="zaliczka" {{ 'selected' if zal_rodzaj == 'zaliczka' }}>Zaliczka</option>
+          <option value="zadatek" {{ 'selected' if zal_rodzaj == 'zadatek' }}>Zadatek na materiał</option>
+        </select></label>
+      <label class="mt przedplata-pole">Kwota (zł) <input name="zaliczka" value="{{ form.get('zaliczka') or '' }}" placeholder="np. 5 000"></label>
+      <label class="mt przedplata-pole">Krótki opis <small>(opcjonalnie — trafi do umowy)</small>
+        <input name="zaliczka_opis" value="{{ form.get('zaliczka_opis') or '' }}" placeholder="np. na zakup rozdzielnicy i okablowania"></label>
     </div>
     <p class="muted" id="slownieBox"></p>
     <label class="mt">Płatność <small>(puste = domyślny tekst)</small>
@@ -99,6 +110,12 @@ function slownie() {
   const k = parseNum(document.querySelector("[name=kwota]").value);
   document.getElementById("sumaLive").textContent = money(k);
 }
+function togglePrzedplata(v) {
+  document.querySelectorAll(".przedplata-pole").forEach(el => {
+    el.style.visibility = (v === "brak") ? "hidden" : "visible";
+  });
+}
+togglePrzedplata(document.querySelector("[name=zaliczka_rodzaj]").value);
 function zapiszIPdf() {
   zmianyZapisane();
   document.getElementById("po_zapisie").value = "pdf";

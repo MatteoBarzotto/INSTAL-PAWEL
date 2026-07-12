@@ -32,13 +32,13 @@
         <button class="btn btn-primary btn-sm" onclick="genPdf({{ u['id'] }}, this)">Generuj PDF</button>
         {% if u['ma_zaliczke'] %}
         <form method="post" action="{{ url_for('umowa_na_fakture', uid=u['id']) }}" class="inline"
-              onsubmit="return confirm('Wystawić fakturę zaliczkową do tej umowy?');">
+              onsubmit="return confirm('Wystawić fakturę na kwotę {{ 'zadatku' if u['zal_nazwa'] == 'zadatek' else 'zaliczki' }} z tej umowy?');">
           <input type="hidden" name="rodzaj" value="zaliczkowa">
-          <button class="btn btn-sm" type="submit" title="Faktura na kwotę zaliczki z umowy">→ FV zaliczka</button>
+          <button class="btn btn-sm" type="submit" title="Faktura na kwotę {{ 'zadatku' if u['zal_nazwa'] == 'zadatek' else 'zaliczki' }} z umowy">→ FV {{ u['zal_nazwa'] }}</button>
         </form>
         {% endif %}
         <form method="post" action="{{ url_for('umowa_na_fakture', uid=u['id']) }}" class="inline"
-              onsubmit="return confirm('Wystawić fakturę końcową do tej umowy?{% if u['ma_zaliczke'] %} (kwota pomniejszona o zaliczkę){% endif %}');">
+              onsubmit="return confirm('Wystawić fakturę końcową do tej umowy?{% if u['ma_zaliczke'] %} (kwota pomniejszona o {{ 'zadatek' if u['zal_nazwa'] == 'zadatek' else 'zaliczkę' }}){% endif %}');">
           <input type="hidden" name="rodzaj" value="koncowa">
           <button class="btn btn-sm" type="submit" title="Faktura końcowa z umowy">→ Faktura</button>
         </form>

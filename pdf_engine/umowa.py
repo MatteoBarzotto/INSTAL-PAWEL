@@ -20,6 +20,8 @@ Schemat `data`:
   "termin_rozpoczecia": "15.07.2026",
   "termin_zakonczenia": "31.07.2026",
   "wynagrodzenie": { "kwota": 26820.0, "zaliczka": 5000.0,     // zaliczka opcjonalna
+                     "zaliczka_rodzaj": "zaliczka" | "zadatek", // opcjonalne (default zaliczka)
+                     "zaliczka_opis": "np. na zakup materiałów",// opcjonalny krótki opis
                      "platnosc": "przelewem ... w terminie 7 dni ..." },
   "gwarancja":   "24 miesiące",
   "dodatkowe":   [ "punkt", ... ],                             // opcjonalne
@@ -163,9 +165,22 @@ def generate_umowa_pdf(data, out_path):
     pw = [f'Za wykonanie przedmiotu umowy Strony ustalają wynagrodzenie w kwocie '
           f'<b>{money(kwota)}</b> (słownie: {liczba_slownie(kwota)}).']
     if zaliczka > 0:
-        pw.append(f'Zamawiający wpłaci Wykonawcy zaliczkę w kwocie <b>{money(zaliczka)}</b> '
-                  f'(słownie: {liczba_slownie(zaliczka)}) przed rozpoczęciem prac. '
-                  f'Zaliczka zostanie rozliczona w płatności końcowej.')
+        zal_rodzaj = (wyn.get("zaliczka_rodzaj") or "zaliczka").strip().lower()
+        zal_opis = (wyn.get("zaliczka_opis") or "").strip()
+        if zal_rodzaj == "zadatek":
+            txt = (f'Zamawiający wpłaci Wykonawcy zadatek na materiał w kwocie '
+                   f'<b>{money(zaliczka)}</b> (słownie: {liczba_slownie(zaliczka)}) przed '
+                   f'rozpoczęciem prac. Zadatek zostanie zaliczony na poczet wynagrodzenia '
+                   f'w płatności końcowej (art. 394 Kodeksu cywilnego).')
+        else:
+            txt = (f'Zamawiający wpłaci Wykonawcy zaliczkę w kwocie <b>{money(zaliczka)}</b> '
+                   f'(słownie: {liczba_slownie(zaliczka)}) przed rozpoczęciem prac. '
+                   f'Zaliczka zostanie rozliczona w płatności końcowej.')
+        if zal_opis:
+            if not zal_opis.endswith((".", "!", "?")):
+                zal_opis += "."
+            txt += f' {zal_opis[0].upper() + zal_opis[1:]}'
+        pw.append(txt)
     pw.append('Płatność: ' + (wyn.get("platnosc") or
               "przelewem na rachunek bankowy Wykonawcy lub gotówką, w terminie 7 dni od dnia "
               "odbioru prac i wystawienia faktury."))
