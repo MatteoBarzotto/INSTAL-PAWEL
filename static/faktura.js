@@ -59,7 +59,11 @@ function render() {
   document.getElementById("s_regon_row").style.display = document.getElementById("t_regon").checked ? "" : "none";
   document.getElementById("n_regon_row").style.display = (document.getElementById("t_regon").checked && !osfiz) ? "" : "none";
   document.getElementById("n_nip_row").style.display = osfiz ? "none" : "";
-  document.getElementById("p_bank_row").style.display = document.getElementById("t_bank").checked ? "" : "none";
+  // bank i nr konta tylko przy przelewie — przy gotówce chowamy
+  const sposob = document.getElementById("p_sposob").value;
+  const gotowka = /gotów|gotow/i.test(sposob) && !/przelew/i.test(sposob);
+  document.getElementById("p_bank_row").style.display =
+    (document.getElementById("t_bank").checked && !gotowka) ? "" : "none";
   document.getElementById("klauzulaBox").style.display = document.getElementById("t_klauzula").checked ? "" : "none";
   autoGrow(document.getElementById("klauzula"));
 }
@@ -137,6 +141,7 @@ function wybierzNabywce(id) {
   // adres_html może zawierać <br/> — zamień na przecinki w jednym wierszu
   document.getElementById("n_adres").value = (c.adres_html || "").replace(/<br\s*\/?>/gi, ", ").replace(/\s*,\s*$/, "");
   autoGrow(document.getElementById("n_nazwa"));
+  autoGrow(document.getElementById("n_adres"));
   oblicz();
   document.getElementById("clientPicker").value = "";
 }
