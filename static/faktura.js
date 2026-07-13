@@ -14,11 +14,15 @@ function esc(s) {
     .replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 function autoGrow(el) { el.style.height = "auto"; el.style.height = el.scrollHeight + "px"; }
+/* dopasuj wysokość wszystkich zawijanych pól (długie nazwy nie mogą się ucinać) */
+function autoGrowAll() { document.querySelectorAll("textarea.auto").forEach(autoGrow); }
+window.addEventListener("beforeprint", autoGrowAll);
+window.addEventListener("resize", autoGrowAll);
 
 function itemRowHTML(it, i) {
   return `<tr>
     <td class="lp" data-label="Poz.">${i + 1}</td>
-    <td data-label="Nazwa usługi / towaru"><input class="f" style="width:100%" placeholder="np. Montaż instalacji elektrycznej" value="${esc(it.nazwa)}" oninput="upd(${i},'nazwa',this.value)"></td>
+    <td data-label="Nazwa usługi / towaru"><textarea class="f auto" rows="1" placeholder="np. Montaż instalacji elektrycznej" oninput="upd(${i},'nazwa',this.value);autoGrow(this)">${esc(it.nazwa)}</textarea></td>
     <td class="ctr" data-label="Ilość"><input class="f w-ilosc" inputmode="decimal" value="${esc(it.ilosc)}" oninput="upd(${i},'ilosc',this.value)"></td>
     <td class="ctr" data-label="J.m."><input class="f w-jm" placeholder="szt." value="${esc(it.jm)}" oninput="upd(${i},'jm',this.value)"></td>
     <td class="num" data-label="Cena"><input class="f w-cena" inputmode="decimal" value="${esc(it.cena)}" oninput="upd(${i},'cena',this.value)"></td>
@@ -29,6 +33,7 @@ function itemRowHTML(it, i) {
 function renderItems() {
   document.getElementById("itemsBody").innerHTML = items.map(itemRowHTML).join("");
   oblicz();
+  autoGrowAll();
 }
 function upd(i, key, val) { items[i][key] = val; oblicz(); }
 function dodajPozycje() { items.push({ nazwa: "", ilosc: "1", jm: "usł.", cena: "" }); renderItems(); }
@@ -81,6 +86,9 @@ function zbierzStan() {
 }
 function wczytajStan(o) {
   FIELD_IDS.forEach((id) => { if (o.fields && o.fields[id] != null) document.getElementById(id).value = o.fields[id]; });
+  // faktury zapisane przed dodaniem konta w Ustawieniach: uzupełnij domyślnym bankiem/kontem
+  if (!(o.fields && (o.fields.p_bank || "").trim())) document.getElementById("p_bank").value = DEFAULTS.bank || "";
+  if (!(o.fields && (o.fields.p_konto || "").trim())) document.getElementById("p_konto").value = DEFAULTS.konto || "";
   items = (o.items && o.items.length) ? JSON.parse(JSON.stringify(o.items)) : [{ nazwa: "", ilosc: "1", jm: "usł.", cena: "" }];
   if (o.toggles) {
     document.getElementById("t_blueprint").checked = !!o.toggles.blueprint;
@@ -128,6 +136,7 @@ function wybierzNabywce(id) {
   document.getElementById("n_nazwa").value = c.nazwa || "";
   // adres_html może zawierać <br/> — zamień na przecinki w jednym wierszu
   document.getElementById("n_adres").value = (c.adres_html || "").replace(/<br\s*\/?>/gi, ", ").replace(/\s*,\s*$/, "");
+  autoGrow(document.getElementById("n_nazwa"));
   oblicz();
   document.getElementById("clientPicker").value = "";
 }
@@ -153,6 +162,8 @@ function stosujDefaults() {
   document.getElementById("s_adres").value = DEFAULTS.seller.adres || "";
   document.getElementById("s_nip").value = DEFAULTS.seller.nip || "";
   document.getElementById("p_sposob").value = "Przelew";
+  document.getElementById("p_bank").value = DEFAULTS.bank || "";
+  document.getElementById("p_konto").value = DEFAULTS.konto || "";
   document.getElementById("klauzula").value = DEFAULTS.klauzula || "";
   document.getElementById("f_tel").value = DEFAULTS.tel || "";
   document.getElementById("f_mail").value = DEFAULTS.mail || "";

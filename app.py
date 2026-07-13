@@ -532,7 +532,7 @@ def wycena_na_fakture(qid):
             "s_nazwa": st["nazwa"] or "", "s_adres": st["adres"] or "",
             "s_nip": st["nip"] or "", "s_regon": "",
             "n_nazwa": zam.get("nazwa", ""), "n_adres": adres, "n_nip": "", "n_regon": "",
-            "p_sposob": "Przelew", "p_bank": "", "p_konto": "",
+            "p_sposob": "Przelew", "p_bank": st["bank"] or "", "p_konto": st["konto"] or "",
             "klauzula": "Robocizna zwolniona z podatku VAT na podstawie art. 113 ust. 1 (i ust. 9) "
                         "ustawy z dnia 11 marca 2004 r. o podatku od towarów i usług.",
             "f_tel": st["tel"] or "", "f_mail": st["email"] or "",
@@ -780,12 +780,13 @@ def ustawienia_zapisz():
     conn = db.get_db()
     conn.execute(
         """UPDATE settings SET nazwa=?, podtytul=?, wordmark=?, wordmark_sub=?, nip=?, adres=?,
-           tel=?, email=?, klauzula_vat=?, warunki_json=?, materialy_json=?, pdf_folder=? WHERE id=1""",
+           tel=?, email=?, klauzula_vat=?, warunki_json=?, materialy_json=?, pdf_folder=?,
+           bank=?, konto=? WHERE id=1""",
         (f.get("nazwa", "").strip(), f.get("podtytul", "").strip(), f.get("wordmark", "").strip(),
          f.get("wordmark_sub", "").strip(), f.get("nip", "").strip(), f.get("adres", "").strip(),
          f.get("tel", "").strip(), f.get("email", "").strip(), f.get("klauzula_vat", "").strip(),
          json.dumps(warunki, ensure_ascii=False), json.dumps(materialy, ensure_ascii=False),
-         f.get("pdf_folder", "").strip()))
+         f.get("pdf_folder", "").strip(), f.get("bank", "").strip(), f.get("konto", "").strip()))
     conn.commit()
     conn.close()
     flash("Zapisano ustawienia.", "ok")
@@ -844,6 +845,7 @@ def _faktura_context(conn, f):
         "seller": {"nazwa": st["nazwa"] or "INSTAL-PAWEL — Usługi Elektryczne",
                    "adres": st["adres"] or "", "nip": st["nip"] or "", "regon": ""},
         "tel": st["tel"] or "", "mail": st["email"] or "",
+        "bank": st["bank"] or "", "konto": st["konto"] or "",
         "klauzula": "Robocizna zwolniona z podatku VAT na podstawie art. 113 ust. 1 (i ust. 9) "
                     "ustawy z dnia 11 marca 2004 r. o podatku od towarów i usług.",
     }
@@ -1146,7 +1148,7 @@ def umowa_na_fakture(uid):
             "s_nazwa": st["nazwa"] or "", "s_adres": st["adres"] or "",
             "s_nip": st["nip"] or "", "s_regon": "",
             "n_nazwa": zam.get("nazwa", ""), "n_adres": adres, "n_nip": "", "n_regon": "",
-            "p_sposob": "Przelew", "p_bank": "", "p_konto": "",
+            "p_sposob": "Przelew", "p_bank": st["bank"] or "", "p_konto": st["konto"] or "",
             "klauzula": "Robocizna zwolniona z podatku VAT na podstawie art. 113 ust. 1 (i ust. 9) "
                         "ustawy z dnia 11 marca 2004 r. o podatku od towarów i usług.",
             "f_tel": st["tel"] or "", "f_mail": st["email"] or "",

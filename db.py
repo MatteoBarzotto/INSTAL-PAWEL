@@ -15,6 +15,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(HERE, "dane.db")
 PRZYKLAD = os.path.join(HERE, "pdf_engine", "przyklad_dane.json")
 
+# Domyślna płatność na fakturze (edytowalna w Ustawieniach)
+BANK_DOMYSLNY = "PKO BP"
+KONTO_DOMYSLNE = "62 1020 2212 0000 5402 0493 0394"
+
 
 def get_db():
     """Połączenie z bazą; wiersze jako słowniki (sqlite3.Row)."""
@@ -32,7 +36,9 @@ CREATE TABLE IF NOT EXISTS settings (
     klauzula_vat TEXT,
     warunki_json TEXT,                 -- lista domyślnych punktów "Warunki"
     materialy_json TEXT,               -- domyślne "materiały pomocnicze" (lista bullet_html)
-    pdf_folder TEXT
+    pdf_folder TEXT,
+    bank TEXT,                         -- nazwa banku (domyślna płatność na fakturze)
+    konto TEXT                         -- numer rachunku (domyślna płatność na fakturze)
 );
 
 CREATE TABLE IF NOT EXISTS clients (
@@ -131,6 +137,13 @@ def _migrate(conn):
                 nip = "x"  # nie da się ocenić — zostaw 0
             if not nip:
                 conn.execute("UPDATE invoices SET osoba_fiz=1 WHERE id=?", (r[0],))
+    # bank + numer konta: domyślna płatność na fakturze (żeby nie wpisywać za każdym razem)
+    addcol("settings", "bank", "bank TEXT")
+    addcol("settings", "konto", "konto TEXT")
+    conn.execute("UPDATE settings SET bank=? WHERE id=1 AND (bank IS NULL OR bank='')",
+                 (BANK_DOMYSLNY,))
+    conn.execute("UPDATE settings SET konto=? WHERE id=1 AND (konto IS NULL OR konto='')",
+                 (KONTO_DOMYSLNE,))
     conn.commit()
 
 
@@ -154,15 +167,16 @@ def _seed(conn):
     conn.execute(
         """INSERT INTO settings
            (id, nazwa, podtytul, wordmark, wordmark_sub, nip, adres, tel, email,
-            klauzula_vat, warunki_json, materialy_json, pdf_folder)
-           VALUES (1,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            klauzula_vat, warunki_json, materialy_json, pdf_folder, bank, konto)
+           VALUES (1,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
         (wy["nazwa"], wy.get("podtytul", ""), wy.get("wordmark", "INSTAL-PAWEL"),
          wy.get("wordmark_sub", "USŁUGI ELEKTRYCZNE"), wy.get("nip", ""), wy.get("adres", ""),
          wy.get("tel", ""), wy.get("email", ""),
          "",  # pusta klauzula = użyj sensownego domyślnego tekstu z silnika (art. 113)
          json.dumps(d.get("warunki", []), ensure_ascii=False),
          json.dumps(d.get("materialy_pomocnicze", []), ensure_ascii=False),
-         os.path.join(os.path.expanduser("~"), "Wyceny-InstalPawel")),
+         os.path.join(os.path.expanduser("~"), "Wyceny-InstalPawel"),
+         BANK_DOMYSLNY, KONTO_DOMYSLNE),
     )
 
     # Klient BUDMAX

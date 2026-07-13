@@ -22,6 +22,11 @@
       <label>Telefon <input name="tel" value="{{ s['tel'] or '' }}"></label>
       <label>E-mail <input name="email" value="{{ s['email'] or '' }}"></label>
     </div>
+    <div class="row2">
+      <label>Bank <small>(na fakturze)</small> <input name="bank" value="{{ s['bank'] or '' }}"></label>
+      <label>Numer konta <small>(wstawia się na każdą nową fakturę)</small>
+        <input name="konto" value="{{ s['konto'] or '' }}"></label>
+    </div>
   </section>
 
   <section class="card">

@@ -69,7 +69,7 @@
       <div class="pcard">
         <div class="phead" style="background:#16263D;"><span class="dia" style="background:#F39019;"></span> Sprzedawca</div>
         <div class="pbody">
-          <div class="pname"><input class="f" id="s_nazwa" style="width:100%" placeholder="Nazwa sprzedawcy"></div>
+          <div class="pname"><textarea class="f auto" id="s_nazwa" rows="1" placeholder="Nazwa sprzedawcy" oninput="autoGrow(this)"></textarea></div>
           <div class="prow"><span class="k">Adres:</span> <input class="f" id="s_adres" style="flex:1" placeholder="ul. ..., 00-000 Miasto"></div>
           <div class="prow"><span class="k">NIP:</span> <input class="f" id="s_nip" style="flex:1" placeholder="000-000-00-00"></div>
           <div class="prow" id="s_regon_row"><span class="k">REGON:</span> <input class="f" id="s_regon" style="flex:1" placeholder="000000000"></div>
@@ -78,7 +78,7 @@
       <div class="pcard">
         <div class="phead" style="background:#2E7BC4;"><span class="dia" style="background:#fff;"></span> Nabywca</div>
         <div class="pbody">
-          <div class="pname"><input class="f fb" id="n_nazwa" style="width:100%" placeholder="Nazwa nabywcy / Imię i nazwisko"></div>
+          <div class="pname"><textarea class="f fb auto" id="n_nazwa" rows="1" placeholder="Nazwa nabywcy / Imię i nazwisko" oninput="autoGrow(this)"></textarea></div>
           <div class="prow"><span class="k">Adres:</span> <input class="f fb" id="n_adres" style="flex:1" placeholder="ul. ..., 00-000 Miasto"></div>
           <div class="prow" id="n_nip_row"><span class="k">NIP:</span> <input class="f fb" id="n_nip" style="flex:1" placeholder="000-000-00-00"></div>
           <div class="prow" id="n_regon_row"><span class="k">REGON:</span> <input class="f fb" id="n_regon" style="flex:1" placeholder="000000000"></div>
