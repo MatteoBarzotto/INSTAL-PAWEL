@@ -80,12 +80,9 @@
     <table class="grid pozycje">
       <thead>
         <tr>
-          <th style="width:28%">Z cennika robocizny</th>
+          <th style="width:32%">Z cennika robocizny</th>
           <th>Nazwa etapu prac</th>
-          <th style="width:9%">Ilość</th>
-          <th style="width:9%">j.m.</th>
-          <th style="width:13%" class="r">Cena jedn. (zł)</th>
-          <th style="width:13%" class="r">Wartość</th>
+          <th style="width:15%" class="r">Wartość (zł)</th>
           <th style="width:5%"></th>
         </tr>
       </thead>
@@ -205,10 +202,7 @@
       </select>
     </td>
     <td><input class="r-nazwa" placeholder="np. Montaż rozdzielnicy"></td>
-    <td><input class="r-ilosc" type="number" step="0.5" min="0" value="1" oninput="przeliczSume()"></td>
-    <td><input class="r-jm" placeholder="szt."></td>
-    <td><input class="r-cena r" type="number" step="0.01" min="0" value="0" oninput="przeliczSume()"></td>
-    <td class="r nowrap r-wart">0,00 zł</td>
+    <td><input class="r-kwota r" type="number" step="0.01" min="0" value="0" oninput="przeliczSume()"></td>
     <td class="c"><button type="button" class="btn btn-sm btn-danger" onclick="usunEtap(this)">✕</button></td>
   </tr>
 </template>

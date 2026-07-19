@@ -275,28 +275,16 @@ def generate_offer_pdf(data, out_path):
         etapy_rob = [e for e in (rob.get("etapy") or []) if float(e.get("kwota") or 0) > 0]
         if etapy_rob:
             # wykaz etapów prac — klient widzi, co wchodzi w cenę robocizny
-            def _il_txt(e):
-                il = e.get("ilosc")
-                try:
-                    il = float(il)
-                    il = str(int(il)) if il.is_integer() else f"{il:g}".replace(".", ",")
-                except (TypeError, ValueError):
-                    il = str(il or "")
-                return (il + " " + (e.get("jm") or "")).strip()
             rr = [[Paragraph("Lp.", S["thC"]), Paragraph("Robocizna — wykaz prac", S["th"]),
-                   Paragraph("Ilość", S["thC"]), Paragraph("Cena jedn.", S["thR"]),
                    Paragraph("Wartość", S["thR"])]]
             for i, e in enumerate(etapy_rob, 1):
-                cena_txt = money(e["cena"]) if float(e.get("cena") or 0) > 0 else ""
                 rr.append([Paragraph(str(i), S["cellC"]), Paragraph(e.get("nazwa", ""), S["cell"]),
-                           Paragraph(_il_txt(e), S["cellC"]), Paragraph(cena_txt, S["cellR"]),
                            Paragraph(money(e["kwota"]), S["cellR"])])
             rr.append([Paragraph("<b>RAZEM ROBOCIZNA" +
                                  (" (zw. z VAT)" if rob.get("vat_zwolniona", True) else "") + "</b>", S["cell"]),
                        Paragraph("", S["cell"]),
-                       Paragraph("", S["cell"]), Paragraph("", S["cell"]),
                        Paragraph("<b>" + money(rob["kwota"]) + "</b>", S["cellR"])])
-            tr_ = Table(rr, colWidths=[12 * mm, 87 * mm, 21 * mm, 27 * mm, 27 * mm], repeatRows=1)
+            tr_ = Table(rr, colWidths=[12 * mm, 129 * mm, 33 * mm], repeatRows=1)
             rs = [("BACKGROUND", (0, 0), (-1, 0), BLUE), ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
                   ("TOPPADDING", (0, 0), (-1, -1), 4), ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
                   ("LEFTPADDING", (0, 0), (-1, -1), 8), ("RIGHTPADDING", (0, 0), (-1, -1), 8),

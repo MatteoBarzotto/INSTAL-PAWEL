@@ -99,9 +99,10 @@ function dodajEtap(dane) {
   $("rob-body").appendChild(tr);
   if (dane) {
     tr.querySelector(".r-nazwa").value = dane.nazwa || "";
-    tr.querySelector(".r-ilosc").value = dane.ilosc != null && dane.ilosc !== "" ? dane.ilosc : 1;
-    tr.querySelector(".r-jm").value = dane.jm || "";
-    tr.querySelector(".r-cena").value = dane.cena != null ? dane.cena : 0;
+    // starsze wyceny miały ilość × cena jedn. — przelicz na jedną wartość
+    const kwota = dane.kwota != null ? Number(dane.kwota)
+      : (Number(dane.ilosc) || 0) * (Number(dane.cena) || 0);
+    tr.querySelector(".r-kwota").value = kwota || 0;
   }
   przeliczSume();
   return tr;
@@ -117,19 +118,14 @@ function wybierzEtapCennika(sel) {
   const r = byId(ROBOCIZNA_CENNIK, sel.value);
   if (!r) return;
   tr.querySelector(".r-nazwa").value = r.nazwa;
-  tr.querySelector(".r-cena").value = r.cena_brutto;
-  tr.querySelector(".r-jm").value = r.jm || "szt.";
-  if (!tr.querySelector(".r-ilosc").value) tr.querySelector(".r-ilosc").value = 1;
+  tr.querySelector(".r-kwota").value = r.cena_brutto;
   przeliczSume();
 }
 
 function sumaRobocizny() {
   let s = 0;
-  document.querySelectorAll("#rob-body tr").forEach((tr) => {
-    const w = (Number(tr.querySelector(".r-ilosc").value) || 0) *
-              (Number(tr.querySelector(".r-cena").value) || 0);
-    tr.querySelector(".r-wart").textContent = money(w);
-    s += w;
+  document.querySelectorAll("#rob-body .r-kwota").forEach((el) => {
+    s += Number(el.value) || 0;
   });
   return s;
 }
@@ -204,11 +200,9 @@ function zbierzPayload() {
       etapy: Array.from(document.querySelectorAll("#rob-body tr"))
         .map((tr) => ({
           nazwa: tr.querySelector(".r-nazwa").value.trim(),
-          ilosc: Number(tr.querySelector(".r-ilosc").value) || 0,
-          jm: tr.querySelector(".r-jm").value.trim(),
-          cena: Number(tr.querySelector(".r-cena").value) || 0,
+          kwota: Number(tr.querySelector(".r-kwota").value) || 0,
         }))
-        .filter((e) => e.nazwa || e.ilosc * e.cena > 0),
+        .filter((e) => e.nazwa || e.kwota > 0),
     },
     uslugi_dodatkowe: Array.from(document.querySelectorAll("#uslugi-body .usluga-row"))
       .map((row) => ({
@@ -267,8 +261,7 @@ function hydrate() {
       f.robocizna.etapy.forEach(dodajEtap);
     } else if (Number(f.robocizna.kwota) > 0) {
       // stara wycena (jeden opis + kwota) -> jeden etap
-      dodajEtap({ nazwa: f.robocizna.opis || "Robocizna", ilosc: 1, jm: "kpl.",
-                  cena: Number(f.robocizna.kwota) });
+      dodajEtap({ nazwa: f.robocizna.opis || "Robocizna", kwota: Number(f.robocizna.kwota) });
     }
   }
   (f.uslugi_dodatkowe || []).forEach(dodajUsluge);

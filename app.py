@@ -218,14 +218,13 @@ def _assemble(conn, payload):
     r = payload.get("robocizna") or {}
     etapy = []
     for e in r.get("etapy") or []:
-        ilosc = float(e.get("ilosc") or 0)
-        cena = float(e.get("cena") or 0)
-        kwota_e = round(ilosc * cena, 2)
+        kwota_e = float(e.get("kwota") or 0)
+        if kwota_e <= 0:  # starszy format etapu: ilość × cena jedn.
+            kwota_e = round(float(e.get("ilosc") or 0) * float(e.get("cena") or 0), 2)
         if kwota_e <= 0:
             continue
         etapy.append({"nazwa": (e.get("nazwa") or "").strip() or "Prace elektryczne",
-                      "ilosc": ilosc, "jm": (e.get("jm") or "").strip(),
-                      "cena": cena, "kwota": kwota_e})
+                      "kwota": kwota_e})
     kwota_rob = round(sum(e["kwota"] for e in etapy), 2) or float(r.get("kwota") or 0)
     if kwota_rob > 0:
         rob = {"opis": r.get("opis") or "Robocizna — wykaz prac",
@@ -545,19 +544,11 @@ def wycena_na_fakture(qid):
     rob = qd.get("robocizna")
     if rob and rob.get("etapy"):
         for e in rob["etapy"]:
-            il = float(e.get("ilosc") or 0)
-            cena = float(e.get("cena") or 0)
-            kwota_e = float(e.get("kwota") or il * cena)
+            kwota_e = float(e.get("kwota") or 0)
             if kwota_e <= 0:
                 continue
-            if il > 0 and abs(il * cena - kwota_e) < 0.005:
-                il_txt = str(int(il)) if il.is_integer() else str(il).replace(".", ",")
-                items.append({"nazwa": e.get("nazwa", ""), "ilosc": il_txt,
-                              "jm": e.get("jm") or "szt.",
-                              "cena": f"{cena:.2f}".replace(".", ",")})
-            else:
-                items.append({"nazwa": e.get("nazwa", ""), "ilosc": "1", "jm": "kpl.",
-                              "cena": f"{kwota_e:.2f}".replace(".", ",")})
+            items.append({"nazwa": e.get("nazwa", ""), "ilosc": "1", "jm": "usł.",
+                          "cena": f"{kwota_e:.2f}".replace(".", ",")})
     elif rob and float(rob.get("kwota", 0)) > 0:
         items.append({"nazwa": rob.get("opis", "Robocizna"), "ilosc": "1", "jm": "usł.",
                       "cena": f"{float(rob['kwota']):.2f}".replace(".", ",")})

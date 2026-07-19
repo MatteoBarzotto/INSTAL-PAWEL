@@ -57,7 +57,7 @@ generate_offer_pdf(data: dict, out_path: str) -> str
   "przedmiot":  "tekst opisu przedmiotu",
   "pozycje":   [ { "nazwa","ilosc":"8 szt.", "brutto": 3150 }, ... ],   // ceny brutto
   "robocizna":  { "opis", "kwota": 4500, "vat_zwolniona": true,          // opcjonalne
-                  "etapy": [ { "nazwa","ilosc":8,"jm":"szt.","cena":90,"kwota":720 }, ... ] }, // opcjonalny wykaz prac
+                  "etapy": [ { "nazwa","kwota":720 }, ... ] },           // opcjonalny wykaz prac
   "uslugi_dodatkowe": [ { "opis", "kwota": 350 }, ... ],                 // opcjonalne (transport itp.)
   "spec_techniczna": [ { "tytul", "parametry": [["Klucz","Wartość"], ...] }, ... ],  // opcjonalne
   "konstrukcja": { "tytul","opis":[bullet_html,...], "naglowek_wykazu",
