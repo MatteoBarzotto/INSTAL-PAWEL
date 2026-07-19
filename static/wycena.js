@@ -92,35 +92,61 @@ function sumaUslug() {
   return s;
 }
 
+/* ---------------------------------------------------- etapy robocizny */
+function dodajEtap(dane) {
+  const tpl = $("rob-tpl").content.cloneNode(true);
+  const tr = tpl.querySelector("tr");
+  $("rob-body").appendChild(tr);
+  if (dane) {
+    tr.querySelector(".r-nazwa").value = dane.nazwa || "";
+    tr.querySelector(".r-ilosc").value = dane.ilosc != null && dane.ilosc !== "" ? dane.ilosc : 1;
+    tr.querySelector(".r-jm").value = dane.jm || "";
+    tr.querySelector(".r-cena").value = dane.cena != null ? dane.cena : 0;
+  }
+  przeliczSume();
+  return tr;
+}
+
+function usunEtap(btn) {
+  btn.closest("tr").remove();
+  przeliczSume();
+}
+
+function wybierzEtapCennika(sel) {
+  const tr = sel.closest("tr");
+  const r = byId(ROBOCIZNA_CENNIK, sel.value);
+  if (!r) return;
+  tr.querySelector(".r-nazwa").value = r.nazwa;
+  tr.querySelector(".r-cena").value = r.cena_brutto;
+  tr.querySelector(".r-jm").value = r.jm || "szt.";
+  if (!tr.querySelector(".r-ilosc").value) tr.querySelector(".r-ilosc").value = 1;
+  przeliczSume();
+}
+
+function sumaRobocizny() {
+  let s = 0;
+  document.querySelectorAll("#rob-body tr").forEach((tr) => {
+    const w = (Number(tr.querySelector(".r-ilosc").value) || 0) *
+              (Number(tr.querySelector(".r-cena").value) || 0);
+    tr.querySelector(".r-wart").textContent = money(w);
+    s += w;
+  });
+  return s;
+}
+
 /* ---------------------------------------------------- suma na żywo */
 function przeliczSume() {
   let mat = 0;
   document.querySelectorAll("#pozycje-body tr").forEach((tr) => {
     mat += Number(tr.querySelector(".p-brutto").value) || 0;
   });
-  const rob = Number($("rob_kwota").value) || 0;
+  const rob = sumaRobocizny();
   const uslugi = sumaUslug();
   $("sum-mat").textContent = money(mat);
   $("sum-rob").textContent = money(rob);
   $("sum-uslugi").textContent = money(uslugi);
   $("sum-uslugi-box").classList.toggle("hidden", uslugi <= 0);
   $("sum-total").textContent = money(mat + rob + uslugi);
-}
-
-/* ---------------------------------------------------- cennik robocizny */
-function dodajZCennika() {
-  const sel = $("rob_cennik");
-  const r = byId(ROBOCIZNA_CENNIK, sel.value);
-  if (!r) return;
-  const il = Math.max(1, Number($("rob_ilosc").value) || 1);
-  // dolicz kwotę do robocizny i dopisz pozycję do opisu (np. "10× punkt oświetleniowy")
-  $("rob_kwota").value = ((Number($("rob_kwota").value) || 0) + il * r.cena_brutto).toFixed(2);
-  const bez = r.nazwa.replace(/\s*\(montaż\)\s*$/i, "");
-  const wpis = il + "× " + bez.charAt(0).toLowerCase() + bez.slice(1); // mała litera tylko na początku
-  const opis = $("rob_opis").value.trim();
-  $("rob_opis").value = opis ? opis + ", " + wpis : "Robocizna: " + wpis;
-  $("rob_ilosc").value = 1;
-  przeliczSume();
 }
 
 /* ---------------------------------------------------- pokazywanie sekcji */
@@ -174,9 +200,15 @@ function zbierzPayload() {
     client_id: $("client_id").value || null,
     pozycje,
     robocizna: {
-      opis: $("rob_opis").value.trim() || "Robocizna",
-      kwota: Number($("rob_kwota").value) || 0,
       vat_zwolniona: $("rob_vat").checked,
+      etapy: Array.from(document.querySelectorAll("#rob-body tr"))
+        .map((tr) => ({
+          nazwa: tr.querySelector(".r-nazwa").value.trim(),
+          ilosc: Number(tr.querySelector(".r-ilosc").value) || 0,
+          jm: tr.querySelector(".r-jm").value.trim(),
+          cena: Number(tr.querySelector(".r-cena").value) || 0,
+        }))
+        .filter((e) => e.nazwa || e.ilosc * e.cena > 0),
     },
     uslugi_dodatkowe: Array.from(document.querySelectorAll("#uslugi-body .usluga-row"))
       .map((row) => ({
@@ -218,7 +250,7 @@ function hydrate() {
   $("materialy").value = (DOMYSLNE_MATERIALY || []).join("\n");
 
   const f = QUOTE_DATA && QUOTE_DATA._form ? QUOTE_DATA._form : null;
-  if (!f) { dodajWiersz(); przeliczSume(); return; }
+  if (!f) { dodajWiersz(); dodajEtap(); przeliczSume(); return; }
 
   if (f.numer) $("numer").value = f.numer;
   if (f.data) $("data").value = f.data;
@@ -230,9 +262,14 @@ function hydrate() {
   if (!(f.pozycje || []).length) dodajWiersz();
 
   if (f.robocizna) {
-    $("rob_opis").value = f.robocizna.opis || "";
-    $("rob_kwota").value = f.robocizna.kwota || 0;
     $("rob_vat").checked = f.robocizna.vat_zwolniona !== false;
+    if (f.robocizna.etapy && f.robocizna.etapy.length) {
+      f.robocizna.etapy.forEach(dodajEtap);
+    } else if (Number(f.robocizna.kwota) > 0) {
+      // stara wycena (jeden opis + kwota) -> jeden etap
+      dodajEtap({ nazwa: f.robocizna.opis || "Robocizna", ilosc: 1, jm: "kpl.",
+                  cena: Number(f.robocizna.kwota) });
+    }
   }
   (f.uslugi_dodatkowe || []).forEach(dodajUsluge);
   if (f.include_konstrukcja) {

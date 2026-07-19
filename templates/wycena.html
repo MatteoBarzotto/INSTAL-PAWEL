@@ -74,36 +74,32 @@
     <button type="button" class="btn btn-sm mt" onclick="dodajWiersz()">+ Dodaj pozycję</button>
   </section>
 
-  <!-- ---- Robocizna ---- -->
+  <!-- ---- Robocizna (etapy prac) ---- -->
   <section class="card">
-    <h2>Robocizna</h2>
-    {% if robocizna_cennik %}
-    <div class="row-rob cennik-rob">
-      <label class="grow">Dodaj z cennika robocizny
-        <select id="rob_cennik">
-          {% for r in robocizna_cennik %}
-          <option value="{{ r['id'] }}">{{ r['nazwa'] }} — {{ r['cena_brutto']|money }}{% if r['jm'] %} / {{ r['jm'] }}{% endif %}</option>
-          {% endfor %}
-        </select>
-      </label>
-      <label>Ilość
-        <input id="rob_ilosc" type="number" min="1" value="1" style="width:80px">
-      </label>
-      <button type="button" class="btn btn-sm" onclick="dodajZCennika()">+ Dolicz</button>
-    </div>
-    {% endif %}
-    <div class="row-rob">
-      <label class="grow">Opis
-        <input id="rob_opis" placeholder="np. Montaż i uruchomienie instalacji">
-      </label>
-      <label>Kwota (zł)
-        <input id="rob_kwota" type="number" step="0.01" min="0" value="0" oninput="przeliczSume()">
-      </label>
+    <h2>Robocizna <small>(etapy prac — klient zobaczy wykaz w PDF)</small></h2>
+    <table class="grid pozycje">
+      <thead>
+        <tr>
+          <th style="width:28%">Z cennika robocizny</th>
+          <th>Nazwa etapu prac</th>
+          <th style="width:9%">Ilość</th>
+          <th style="width:9%">j.m.</th>
+          <th style="width:13%" class="r">Cena jedn. (zł)</th>
+          <th style="width:13%" class="r">Wartość</th>
+          <th style="width:5%"></th>
+        </tr>
+      </thead>
+      <tbody id="rob-body"></tbody>
+    </table>
+    <div class="row-rob mt">
+      <button type="button" class="btn btn-sm" onclick="dodajEtap()">+ Dodaj etap robocizny</button>
       <label class="chk">
         <input id="rob_vat" type="checkbox" checked>
         zwolniona z VAT (art. 113)
       </label>
     </div>
+    <p class="muted">Pozycje cennika edytujesz w zakładce
+      <a href="{{ url_for('cennik') }}">Cennik robocizny</a>.</p>
   </section>
 
   <!-- ---- Dodatkowe usługi ---- -->
@@ -195,6 +191,25 @@
       <span class="spec-none muted">—</span>
     </td>
     <td class="c"><button type="button" class="btn btn-sm btn-danger" onclick="usunWiersz(this)">✕</button></td>
+  </tr>
+</template>
+
+<template id="rob-tpl">
+  <tr>
+    <td>
+      <select class="r-cennik" onchange="wybierzEtapCennika(this)">
+        <option value="">— wpis ręczny —</option>
+        {% for r in robocizna_cennik %}
+        <option value="{{ r['id'] }}">{{ r['nazwa'] }} — {{ r['cena_brutto']|money }}{% if r['jm'] %} / {{ r['jm'] }}{% endif %}</option>
+        {% endfor %}
+      </select>
+    </td>
+    <td><input class="r-nazwa" placeholder="np. Montaż rozdzielnicy"></td>
+    <td><input class="r-ilosc" type="number" step="0.5" min="0" value="1" oninput="przeliczSume()"></td>
+    <td><input class="r-jm" placeholder="szt."></td>
+    <td><input class="r-cena r" type="number" step="0.01" min="0" value="0" oninput="przeliczSume()"></td>
+    <td class="r nowrap r-wart">0,00 zł</td>
+    <td class="c"><button type="button" class="btn btn-sm btn-danger" onclick="usunEtap(this)">✕</button></td>
   </tr>
 </template>
 {% endblock %}

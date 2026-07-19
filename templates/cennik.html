@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Cennik robocizny — INSTAL-PAWEŁ{% endblock %}
+{% block content %}
+<div class="page-head"><h1>Cennik robocizny</h1></div>
+
+<section class="card">
+  <h2 id="form-tytul">Dodaj pozycję</h2>
+  <form method="post" action="{{ url_for('cennik_zapisz') }}" id="cennik-form">
+    <input type="hidden" name="id" id="c-id">
+    <div class="row3">
+      <label>Nazwa prac <input name="nazwa" id="c-nazwa" required
+        placeholder="np. Punkt oświetleniowy (montaż)"></label>
+      <label>Jednostka <input name="jm" id="c-jm" placeholder="szt. / godz. / kpl." value="szt."></label>
+      <label>Cena (zł) <input name="cena_brutto" id="c-cena" type="number" step="0.01" min="0" value="0"></label>
+    </div>
+    <div class="actions mt">
+      <button class="btn btn-primary" type="submit">Zapisz pozycję</button>
+      <button class="btn" type="button" onclick="resetForm()">Wyczyść</button>
+    </div>
+  </form>
+  <p class="muted">Pozycje cennika wybierasz potem w wycenie w sekcji „Robocizna" — każdy etap prac
+    z ilością i ceną trafia do PDF, więc klient widzi dokładnie, co wchodzi w cenę robocizny.
+    Robocizna jest zwolniona z VAT (art. 113).</p>
+</section>
+
+<section class="card">
+  <h2>Pozycje cennika ({{ pozycje|length }})</h2>
+  {% if pozycje %}
+  <div class="szukajka"><input type="search" placeholder="🔍 Szukaj prac..." oninput="filtrujTabele(this)"></div>
+  <table class="grid">
+    <thead><tr><th>Nazwa prac</th><th>j.m.</th><th class="r">Cena</th><th class="actions">Działania</th></tr></thead>
+    <tbody>
+      {% for p in pozycje %}
+      <tr>
+        <td>{{ p['nazwa'] }}</td>
+        <td>{{ p['jm'] or '—' }}</td>
+        <td class="r nowrap">{{ p['cena_brutto']|money }}</td>
+        <td class="actions">
+          <button class="btn btn-sm" type="button"
+            onclick='edytuj({{ {"id":p["id"],"nazwa":p["nazwa"],"jm":p["jm"],"cena_brutto":p["cena_brutto"]}|tojson }})'>Edytuj</button>
+          <form method="post" action="{{ url_for('cennik_usun', pid=p['id']) }}" class="inline"
+                onsubmit="return confirm('Usunąć pozycję cennika?');">
+            <button class="btn btn-sm btn-danger" type="submit">Usuń</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">Cennik jest pusty — dodaj pierwszą pozycję powyżej (np. „Gniazdo 230 V (montaż)” — 60 zł / szt.).</p>
+  {% endif %}
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function edytuj(p) {
+  document.getElementById("form-tytul").textContent = "Edytuj pozycję";
+  document.getElementById("c-id").value = p.id;
+  document.getElementById("c-nazwa").value = p.nazwa || "";
+  document.getElementById("c-jm").value = p.jm || "";
+  document.getElementById("c-cena").value = p.cena_brutto || 0;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+function resetForm() {
+  document.getElementById("cennik-form").reset();
+  document.getElementById("c-id").value = "";
+  document.getElementById("form-tytul").textContent = "Dodaj pozycję";
+}
+</script>
+{% endblock %}

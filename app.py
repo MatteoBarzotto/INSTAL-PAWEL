@@ -213,13 +213,26 @@ def _assemble(conn, payload):
         if p.get("spec") and p.get("include_spec", True):
             spec.append({"tytul": p.get("spec_tytul") or nazwa, "parametry": p["spec"]})
 
-    # robocizna
+    # robocizna: wykaz etapów prac (nowy format) lub jeden opis+kwota (stare wyceny)
     rob = None
     r = payload.get("robocizna") or {}
-    if float(r.get("kwota") or 0) > 0:
-        rob = {"opis": r.get("opis", "Robocizna"),
-               "kwota": float(r["kwota"]),
+    etapy = []
+    for e in r.get("etapy") or []:
+        ilosc = float(e.get("ilosc") or 0)
+        cena = float(e.get("cena") or 0)
+        kwota_e = round(ilosc * cena, 2)
+        if kwota_e <= 0:
+            continue
+        etapy.append({"nazwa": (e.get("nazwa") or "").strip() or "Prace elektryczne",
+                      "ilosc": ilosc, "jm": (e.get("jm") or "").strip(),
+                      "cena": cena, "kwota": kwota_e})
+    kwota_rob = round(sum(e["kwota"] for e in etapy), 2) or float(r.get("kwota") or 0)
+    if kwota_rob > 0:
+        rob = {"opis": r.get("opis") or "Robocizna — wykaz prac",
+               "kwota": kwota_rob,
                "vat_zwolniona": bool(r.get("vat_zwolniona", True))}
+        if etapy:
+            rob["etapy"] = etapy
 
     # dodatkowe usługi (np. transport, wynajem podnośnika)
     uslugi = []
@@ -530,7 +543,22 @@ def wycena_na_fakture(qid):
         il, jm, cena = _ilosc_na_czesci(p.get("ilosc", ""), p.get("brutto", 0))
         items.append({"nazwa": p.get("nazwa", ""), "ilosc": il, "jm": jm, "cena": cena})
     rob = qd.get("robocizna")
-    if rob and float(rob.get("kwota", 0)) > 0:
+    if rob and rob.get("etapy"):
+        for e in rob["etapy"]:
+            il = float(e.get("ilosc") or 0)
+            cena = float(e.get("cena") or 0)
+            kwota_e = float(e.get("kwota") or il * cena)
+            if kwota_e <= 0:
+                continue
+            if il > 0 and abs(il * cena - kwota_e) < 0.005:
+                il_txt = str(int(il)) if il.is_integer() else str(il).replace(".", ",")
+                items.append({"nazwa": e.get("nazwa", ""), "ilosc": il_txt,
+                              "jm": e.get("jm") or "szt.",
+                              "cena": f"{cena:.2f}".replace(".", ",")})
+            else:
+                items.append({"nazwa": e.get("nazwa", ""), "ilosc": "1", "jm": "kpl.",
+                              "cena": f"{kwota_e:.2f}".replace(".", ",")})
+    elif rob and float(rob.get("kwota", 0)) > 0:
         items.append({"nazwa": rob.get("opis", "Robocizna"), "ilosc": "1", "jm": "usł.",
                       "cena": f"{float(rob['kwota']):.2f}".replace(".", ",")})
     for u in qd.get("uslugi_dodatkowe") or []:
@@ -579,9 +607,50 @@ def wycena_usun(qid):
 @app.route("/katalog")
 def katalog():
     conn = db.get_db()
-    products = conn.execute("SELECT * FROM products ORDER BY nazwa").fetchall()
+    # robocizna ma własną zakładkę „Cennik robocizny" — w katalogu tylko materiały
+    products = conn.execute(
+        "SELECT * FROM products WHERE COALESCE(kategoria,'') != 'Robocizna' ORDER BY nazwa").fetchall()
     conn.close()
     return render_template("katalog.html", products=products)
+
+
+# ------------------------------------------------------------------ EKRAN: cennik robocizny
+@app.route("/cennik")
+def cennik():
+    conn = db.get_db()
+    pozycje = conn.execute(
+        "SELECT * FROM products WHERE kategoria='Robocizna' ORDER BY nazwa").fetchall()
+    conn.close()
+    return render_template("cennik.html", pozycje=pozycje)
+
+
+@app.route("/cennik/zapisz", methods=["POST"])
+def cennik_zapisz():
+    f = request.form
+    conn = db.get_db()
+    pid = f.get("id")
+    args = (f.get("nazwa", "").strip(), "Robocizna", f.get("jm", "").strip() or "szt.",
+            _parse_num(f.get("cena_brutto")), 0, None)
+    if pid:
+        conn.execute("""UPDATE products SET nazwa=?, kategoria=?, jm=?, cena_brutto=?, vat=?, spec_json=?
+                        WHERE id=?""", args + (pid,))
+    else:
+        conn.execute("""INSERT INTO products (nazwa, kategoria, jm, cena_brutto, vat, spec_json)
+                        VALUES (?,?,?,?,?,?)""", args)
+    conn.commit()
+    conn.close()
+    flash("Zapisano pozycję cennika.", "ok")
+    return redirect(url_for("cennik"))
+
+
+@app.route("/cennik/<int:pid>/usun", methods=["POST"])
+def cennik_usun(pid):
+    conn = db.get_db()
+    conn.execute("DELETE FROM products WHERE id=? AND kategoria='Robocizna'", (pid,))
+    conn.commit()
+    conn.close()
+    flash("Usunięto pozycję cennika.", "ok")
+    return redirect(url_for("cennik"))
 
 
 @app.route("/katalog/zapisz", methods=["POST"])
