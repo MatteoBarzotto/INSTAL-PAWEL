@@ -221,6 +221,14 @@ def _assemble(conn, payload):
                "kwota": float(r["kwota"]),
                "vat_zwolniona": bool(r.get("vat_zwolniona", True))}
 
+    # dodatkowe usługi (np. transport, wynajem podnośnika)
+    uslugi = []
+    for u in payload.get("uslugi_dodatkowe") or []:
+        kwota_u = float(u.get("kwota") or 0)
+        if kwota_u > 0:
+            uslugi.append({"opis": (u.get("opis") or "").strip() or "Usługa dodatkowa",
+                           "kwota": kwota_u})
+
     # konstrukcja (BOM) z mnożnikiem ×N
     konstr = None
     if payload.get("include_konstrukcja") and payload.get("bom_id"):
@@ -260,9 +268,11 @@ def _assemble(conn, payload):
     data = pdf_service.build_data(
         st, client, meta, payload.get("przedmiot", ""), pozycje, rob,
         spec_techniczna=spec or None, konstrukcja=konstr,
-        materialy=materialy or None, warunki=warunki)
+        materialy=materialy or None, warunki=warunki,
+        uslugi_dodatkowe=uslugi or None)
 
-    suma = sum(p["brutto"] for p in pozycje) + (rob["kwota"] if rob else 0)
+    suma = (sum(p["brutto"] for p in pozycje) + (rob["kwota"] if rob else 0)
+            + sum(u["kwota"] for u in uslugi))
     return data, suma, client
 
 
@@ -523,6 +533,10 @@ def wycena_na_fakture(qid):
     if rob and float(rob.get("kwota", 0)) > 0:
         items.append({"nazwa": rob.get("opis", "Robocizna"), "ilosc": "1", "jm": "usł.",
                       "cena": f"{float(rob['kwota']):.2f}".replace(".", ",")})
+    for u in qd.get("uslugi_dodatkowe") or []:
+        if float(u.get("kwota") or 0) > 0:
+            items.append({"nazwa": u.get("opis") or "Usługa dodatkowa", "ilosc": "1", "jm": "usł.",
+                          "cena": f"{float(u['kwota']):.2f}".replace(".", ",")})
 
     numer = _next_faktura_numer(conn)
     stan = {

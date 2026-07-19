@@ -106,6 +106,13 @@
     </div>
   </section>
 
+  <!-- ---- Dodatkowe usługi ---- -->
+  <section class="card">
+    <h2>Dodatkowe usługi <small>(opcjonalne — np. transport, wynajem podnośnika, utylizacja)</small></h2>
+    <div id="uslugi-body"></div>
+    <button type="button" class="btn btn-sm mt" onclick="dodajUsluge()">+ Dodaj usługę</button>
+  </section>
+
   <!-- ---- Sekcje techniczne (opcjonalne) ---- -->
   <section class="card">
     <h2>Sekcje techniczne <small>(opcjonalne — pełna oferta)</small></h2>
@@ -154,6 +161,7 @@
     <div class="sums">
       <div>Materiały: <b id="sum-mat">0,00 zł</b></div>
       <div>Robocizna: <b id="sum-rob">0,00 zł</b></div>
+      <div id="sum-uslugi-box" class="hidden">Dodatkowe usługi: <b id="sum-uslugi">0,00 zł</b></div>
       <div class="total">RAZEM: <b id="sum-total">0,00 zł</b></div>
     </div>
     <div class="actions">

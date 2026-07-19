@@ -61,6 +61,37 @@ function wybierzProdukt(sel) {
   przeliczSume();
 }
 
+/* ---------------------------------------------------- dodatkowe usługi */
+function dodajUsluge(dane) {
+  const div = document.createElement("div");
+  div.className = "row-rob usluga-row";
+  div.innerHTML =
+    '<label class="grow">Opis usługi ' +
+    '<input class="u-opis" placeholder="np. Transport materiałów / wynajem podnośnika"></label>' +
+    '<label>Kwota (zł) ' +
+    '<input class="u-kwota" type="number" step="0.01" min="0" value="0" oninput="przeliczSume()"></label>' +
+    '<button type="button" class="btn btn-sm btn-danger" onclick="usunUsluge(this)">✕</button>';
+  $("uslugi-body").appendChild(div);
+  if (dane) {
+    div.querySelector(".u-opis").value = dane.opis || "";
+    div.querySelector(".u-kwota").value = dane.kwota != null ? dane.kwota : 0;
+  }
+  przeliczSume();
+}
+
+function usunUsluge(btn) {
+  btn.closest(".usluga-row").remove();
+  przeliczSume();
+}
+
+function sumaUslug() {
+  let s = 0;
+  document.querySelectorAll("#uslugi-body .u-kwota").forEach((el) => {
+    s += Number(el.value) || 0;
+  });
+  return s;
+}
+
 /* ---------------------------------------------------- suma na żywo */
 function przeliczSume() {
   let mat = 0;
@@ -68,9 +99,12 @@ function przeliczSume() {
     mat += Number(tr.querySelector(".p-brutto").value) || 0;
   });
   const rob = Number($("rob_kwota").value) || 0;
+  const uslugi = sumaUslug();
   $("sum-mat").textContent = money(mat);
   $("sum-rob").textContent = money(rob);
-  $("sum-total").textContent = money(mat + rob);
+  $("sum-uslugi").textContent = money(uslugi);
+  $("sum-uslugi-box").classList.toggle("hidden", uslugi <= 0);
+  $("sum-total").textContent = money(mat + rob + uslugi);
 }
 
 /* ---------------------------------------------------- cennik robocizny */
@@ -144,6 +178,12 @@ function zbierzPayload() {
       kwota: Number($("rob_kwota").value) || 0,
       vat_zwolniona: $("rob_vat").checked,
     },
+    uslugi_dodatkowe: Array.from(document.querySelectorAll("#uslugi-body .usluga-row"))
+      .map((row) => ({
+        opis: row.querySelector(".u-opis").value.trim(),
+        kwota: Number(row.querySelector(".u-kwota").value) || 0,
+      }))
+      .filter((u) => u.kwota > 0 || u.opis),
     include_konstrukcja: $("inc_konstrukcja").checked,
     bom_id: $("bom_id") ? $("bom_id").value || null : null,
     mnoznik: Number($("mnoznik") ? $("mnoznik").value : 1) || 1,
@@ -194,6 +234,7 @@ function hydrate() {
     $("rob_kwota").value = f.robocizna.kwota || 0;
     $("rob_vat").checked = f.robocizna.vat_zwolniona !== false;
   }
+  (f.uslugi_dodatkowe || []).forEach(dodajUsluge);
   if (f.include_konstrukcja) {
     $("inc_konstrukcja").checked = true; $("konstr-box").classList.remove("hidden");
     if (f.bom_id && $("bom_id")) $("bom_id").value = f.bom_id;

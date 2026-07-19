@@ -22,7 +22,7 @@ def dzis():
 
 def build_data(settings, client, meta, przedmiot, pozycje, robocizna,
                spec_techniczna=None, konstrukcja=None, materialy=None,
-               warunki=None, klauzula=""):
+               warunki=None, klauzula="", uslugi_dodatkowe=None):
     """Buduje słownik `data` dla silnika PDF. Puste sekcje są pomijane."""
     data = {
         "wystawca": {
@@ -47,6 +47,8 @@ def build_data(settings, client, meta, przedmiot, pozycje, robocizna,
         data["przedmiot"] = przedmiot
     if robocizna and float(robocizna.get("kwota", 0)) > 0:
         data["robocizna"] = robocizna
+    if uslugi_dodatkowe:
+        data["uslugi_dodatkowe"] = uslugi_dodatkowe
     if spec_techniczna:
         data["spec_techniczna"] = spec_techniczna
     if konstrukcja:

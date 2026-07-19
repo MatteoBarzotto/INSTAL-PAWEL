@@ -286,11 +286,28 @@ def generate_offer_pdf(data, out_path):
         story.append(Spacer(1, 7))
         suma += float(rob["kwota"])
 
+    # -- dodatkowe usługi (opcjonalne — np. transport, wynajem podnośnika) --
+    uslugi = [u for u in (data.get("uslugi_dodatkowe") or []) if float(u.get("kwota") or 0) > 0]
+    suma_uslug = sum(float(u["kwota"]) for u in uslugi)
+    if uslugi:
+        ur = [[Paragraph(u.get("opis") or "Usługa dodatkowa", S["cell"]),
+               Paragraph("<b>" + money(u["kwota"]) + "</b>", S["cellR"])] for u in uslugi]
+        ut = Table(ur, colWidths=[141 * mm, 33 * mm])
+        ut.setStyle(TableStyle([("BOX", (0, 0), (-1, -1), 0.6, LINE), ("BACKGROUND", (0, 0), (-1, -1), ZEBRA),
+            ("LEFTPADDING", (0, 0), (-1, -1), 8), ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+            ("TOPPADDING", (0, 0), (-1, -1), 5), ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+            ("LINEBELOW", (0, 0), (-1, -2), 0.4, LINE),
+            ("LINEBEFORE", (0, 0), (0, -1), 3, ORANGE)]))
+        story += [ut, Spacer(1, 7)]
+        suma += suma_uslug
+
     # -- podsumowanie --
     sd = [[Paragraph("Materiały (brutto):", S["base"]), Paragraph(money(suma_mat), S["cellR"])]]
     if rob:
         sd.append([Paragraph("Robocizna (zw. z VAT):" if rob.get("vat_zwolniona", True) else "Robocizna (brutto):",
                              S["base"]), Paragraph(money(rob["kwota"]), S["cellR"])])
+    if uslugi:
+        sd.append([Paragraph("Dodatkowe usługi:", S["base"]), Paragraph(money(suma_uslug), S["cellR"])])
     sd.append([Paragraph('<font color="#F5F1E6"><b>RAZEM DO ZAPŁATY:</b></font>',
                  ParagraphStyle("tw", fontName="DJS-B", fontSize=9.6, leading=12, textColor=CREAM)),
                Paragraph('<font color="#F39200"><b>' + money(suma) + '</b></font>',
